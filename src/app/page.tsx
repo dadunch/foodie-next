@@ -1,65 +1,181 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+import React, { useState, useEffect, useRef } from 'react';
+import { QrCode, Camera, User, Store, X } from 'lucide-react';
+import { Html5QrcodeScanner } from "html5-qrcode";
+
+export default function FoodieQRScanner() {
+    const [tables, setTables] = useState<{ id: number; nama_meja: string }[]>([]);
+    const [scanning, setScanning] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+
+    useEffect(() => {
+        const mockTables = [
+            { id: 1, nama_meja: '1' },
+            { id: 2, nama_meja: '2' },
+            { id: 3, nama_meja: '3' },
+            { id: 4, nama_meja: '4' },
+            { id: 5, nama_meja: '5' }
+        ];
+        setTables(mockTables);
+    }, []);
+
+    // Cleanup scanner on unmount
+    useEffect(() => {
+        return () => {
+            if (scannerRef.current) {
+                scannerRef.current.clear().catch(console.error);
+            }
+        };
+    }, []);
+
+    const handleTableClick = (tableId: number) => {
+        const encodedId = btoa(tableId.toString());
+        // alert(`Navigating to Table ${tableId} (encoded: ${encodedId})`);
+        window.location.href = `/customers`;
+    };
+
+    const startScanning = () => {
+        setScanning(true);
+        setError(null);
+
+        // Wait for DOM to update before initializing scanner
+        setTimeout(() => {
+            try {
+                const scanner = new Html5QrcodeScanner(
+                    "qr-reader",
+                    { 
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0,
+                    },
+                    false
+                );
+
+                scannerRef.current = scanner;
+
+                scanner.render(
+                    (decodedText) => {
+                        console.log('QR Code scanned:', decodedText);
+                        scanner.clear().then(() => {
+                            setScanning(false);
+                            scannerRef.current = null;
+                            alert(`QR Code detected: ${decodedText}`);
+                        }).catch(console.error);
+                    },
+                    (errorMessage) => {
+                        // Suppress frequent scan errors
+                        // console.warn(`Scan error: ${errorMessage}`);
+                    }
+                );
+            } catch (err) {
+                console.error('Scanner initialization error:', err);
+                setError('Failed to start camera. Please check permissions.');
+                setScanning(false);
+            }
+        }, 100);
+    };
+
+    const stopScanning = () => {
+        if (scannerRef.current) {
+            scannerRef.current.clear().then(() => {
+                setScanning(false);
+                scannerRef.current = null;
+            }).catch(console.error);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
+                {/* Logo */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl shadow-xl mb-4 transform hover:scale-105 transition-transform">
+                        <QrCode className="w-12 h-12 text-white" />
+                    </div>
+                    <h1 className="text-4xl font-bold text-gray-800">Foodie</h1>
+                    <p className="text-gray-600 mt-2">Smart Restaurant Ordering</p>
+                </div>
+
+                {/* Scanner Box */}
+                <div className="bg-white rounded-3xl shadow-2xl p-8 mb-6">
+                    <div className="text-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-2">Scan QR Code</h2>
+                        <p className="text-gray-600">Scan the QR code on your table to start ordering</p>
+                    </div>
+
+                    {/* QR Scanner Area */}
+                    {!scanning ? (
+                        <div 
+                            onClick={startScanning}
+                            className="relative bg-gradient-to-br from-gray-100 to-gray-50 rounded-2xl p-8 mb-6 cursor-pointer hover:from-gray-200 hover:to-gray-100 transition-all border-2 border-dashed border-gray-300"
+                        >
+                            <div className="text-center">
+                                <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                <p className="text-gray-600 font-medium">Click to Start Scanning</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="relative mb-6">
+                            <button
+                                onClick={stopScanning}
+                                className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                            <div id="qr-reader" className="rounded-2xl overflow-hidden"></div>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+                            {error}
+                        </div>
+                    )}
+
+                    <div className="text-center text-sm text-gray-500">
+                        <p>Having trouble scanning? Try the demo tables below.</p>
+                    </div>
+                </div>
+
+                {/* Demo Tables */}
+                <div className="bg-white rounded-3xl shadow-2xl p-6 mb-6">
+                    <p className="text-center font-semibold text-gray-700 mb-4">Demo Tables:</p>
+                    <div className="grid grid-cols-5 gap-2">
+                        {tables.map((table) => (
+                            <button
+                                key={table.id}
+                                onClick={() => handleTableClick(table.id)}
+                                className="bg-gradient-to-br from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all text-sm"
+                            >
+                                {table.nama_meja}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Login Links */}
+                <div className="bg-white rounded-3xl shadow-xl p-6 text-center">
+                    <p className="text-gray-600 mb-3">Login as</p>
+                    <div className="flex gap-4 justify-center">
+                        <button 
+                            onClick={() => alert('Navigate to Cashier Login')}
+                            className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                        >
+                            <User className="w-5 h-5" />
+                            Cashier
+                        </button>
+                        <button 
+                            onClick={() => alert('Navigate to Restaurant Login')}
+                            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                        >
+                            <Store className="w-5 h-5" />
+                            Restaurant
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+    );
 }
