@@ -7,7 +7,6 @@ export async function GET() {
         const merchants = await query<Merchant>(`
         SELECT DISTINCT m.*
         FROM merchant m
-        JOIN items i ON m.id = i.merchant_id
         ORDER BY m.nama_merchant
         `);
         

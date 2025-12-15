@@ -13,75 +13,42 @@ export default function FoodieMenu() {
     const [loginPassword, setLoginPassword] = useState('');
     const [tableInfo] = useState({ id: 1, nama_meja: 'A-01' });
 
-    // Mock data - replace with API calls
-    const [merchants] = useState([
-        { id: 1, nama_merchant: 'Ayam Bu Rani', deskripsi: 'Indonesian Cuisine' },
-        { id: 2, nama_merchant: 'Warung Padang', deskripsi: 'Padang Cuisine' },
-        { id: 3, nama_merchant: 'Bakso Mas Eko', deskripsi: 'Meatball & Noodles' },
-    ]);
+    
+    const [merchants, setmerchants] = useState<any[]>([]);
+    const [menuItems, setMenuItems] = useState<any[]>([]);
+    
+    useEffect(() => {
+        const fetchMenuItems = async () => {
+            try {
+            const response = await fetch('/api/item');
+            if (!response.ok) {
+                throw new Error('Failed to fetch menu items');
+            }
+            const result = await response.json();
+            setMenuItems(result.data ?? []);
+            } catch (error) {
+            console.error('Error fetching menu items:', error);
+            }
+        };
+        fetchMenuItems();
 
-    const [menuItems] = useState([
-        {
-        id: 1,
-        nama_item: 'Ayam Katsu',
-        deskripsi: 'Nasi + katsu',
-        harga_item: 24000,
-        foto_item: 'https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/e742f588-70bd-49df-8b46-95505b8a266b_Go-Biz_20221107_095331.jpeg?auto=format',
-        nama_merchant: 'Ayam Bu Rani',
-        merchant_id: 1,
-        category: 'food'
-        },
-        {
-        id: 2,
-        nama_item: 'Paket Ayam Woku Lengkap',
-        deskripsi: 'Nasi + Ayam Woku/Dabu2/Saus Tiram + Tahu + Tempe',
-        harga_item: 24000,
-        foto_item: 'https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/9242910b-d13d-4093-9782-3e118c8ab527_Go-Biz_20230320_165702.jpeg?auto=format',
-        nama_merchant: 'Ayam Bu Rani',
-        merchant_id: 1,
-        category: 'food'
-        },
-        {
-        id: 3,
-        nama_item: 'Ikan Nila Dabu-Dabu',
-        deskripsi: 'Nasi + Ikan Nila + Tahu + Tempe + Sambal',
-        harga_item: 29000,
-        foto_item: 'https://i.gojekapi.com/darkroom/gofood-indonesia/v2/images/uploads/7b989d97-45f6-4667-a9e4-d4f5976f0f00_Go-Biz_20230320_172239.jpeg?auto=format',
-        nama_merchant: 'Ayam Bu Rani',
-        merchant_id: 1,
-        category: 'food'
-        },
-        {
-        id: 4,
-        nama_item: 'Es Teh Manis',
-        deskripsi: 'Teh manis dingin',
-        harga_item: 5000,
-        foto_item: 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400',
-        nama_merchant: 'Warung Padang',
-        merchant_id: 2,
-        category: 'drink'
-        },
-        {
-        id: 5,
-        nama_item: 'Bakso Special',
-        deskripsi: 'Bakso dengan tahu, siomay, dan pangsit',
-        harga_item: 18000,
-        foto_item: 'https://images.unsplash.com/photo-1591814468924-caf88d1232e1?w=400',
-        nama_merchant: 'Bakso Mas Eko',
-        merchant_id: 3,
-        category: 'food'
-        },
-        {
-        id: 6,
-        nama_item: 'Pisang Goreng',
-        deskripsi: 'Pisang goreng crispy',
-        harga_item: 8000,
-        foto_item: 'https://images.unsplash.com/photo-1625944525533-473f1a3d54e7?w=400',
-        nama_merchant: 'Ayam Bu Rani',
-        merchant_id: 1,
-        category: 'dessert'
-        }
-    ]);
+        const fetchMerchants = async () => {
+            try {
+            const response = await fetch('/api/merchant');
+            if (!response.ok) {
+                throw new Error('Failed to fetch merchants');
+            }
+            const result = await response.json();
+            setmerchants(result.data ?? []);
+            }
+            catch (error) {
+            console.error('Error fetching merchants:', error);
+            }
+        };
+        fetchMerchants();
+
+
+    }, []);
 
     const formatRupiah = (price: number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -91,11 +58,13 @@ export default function FoodieMenu() {
         }).format(price);
     };
 
-    const filtegreenItems = menuItems.filter(item => {
+    const filteredItems = menuItems.filter(item => {
         const matchesSearch = item.nama_item.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             item.nama_merchant.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesMerchant = selectedMerchant === '' || item.merchant_id.toString() === selectedMerchant;
-        const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+
+        const matchesMerchant = selectedMerchant === '' || item.nama_merchant.toString() === selectedMerchant;
+        const matchesCategory = selectedCategory === 'all' || 
+                            (item.nama_kategori && item.nama_kategori.toLowerCase() === selectedCategory.toLowerCase());
         
         return matchesSearch && matchesMerchant && matchesCategory;
     });
@@ -104,8 +73,8 @@ export default function FoodieMenu() {
         // Search is handled by filtering
     };
 
-    const handleMerchantClick = (merchantId: string) => {
-        setSelectedMerchant(merchantId);
+    const handleMerchantClick = (merchantName: string) => {
+        setSelectedMerchant(merchantName);
     };
 
     const handleItemClick = (item : any) => {
@@ -176,10 +145,10 @@ export default function FoodieMenu() {
             </button>
             {merchants.map((merchant) => (
                 <button
-                key={merchant.id}
-                onClick={() => handleMerchantClick(merchant.id.toString())}
+                key={merchant.nama_merchant}
+                onClick={() => handleMerchantClick(merchant.nama_merchant.toString())}
                 className={`flex-shrink-0 px-6 py-3 rounded-xl border-2 transition-all ${
-                    selectedMerchant === merchant.id.toString()
+                    selectedMerchant === merchant.nama_merchant.toString()
                     ? 'bg-gradient-to-br from-green-600 to-green-400  text-white border-transparent shadow-lg'
                     : 'bg-white text-gray-700 border-gray-200 hover:border-green-300'
                 }`}
@@ -214,7 +183,7 @@ export default function FoodieMenu() {
 
             {/* Menu Items Grid */}
             <div className="grid xl:grid-cols-8 lg:grid-cols-6 md:grid-cols-4 sm:grid-cols-2 xs:grid-cols-1 gap-4">
-            {filtegreenItems.map((item) => (
+            {filteredItems.map((item) => (
                 <div
                 key={item.id}
                 onClick={() => handleItemClick(item)}
@@ -222,7 +191,7 @@ export default function FoodieMenu() {
                 >
                 <div
                     className="h-40 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${item.foto_item})` }}
+                    style={{ backgroundImage: `url(/img/${item.foto_item})` }}
                 />
                 <div className="p-3">
                     <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-1">
@@ -237,7 +206,7 @@ export default function FoodieMenu() {
             ))}
             </div>
 
-            {filtegreenItems.length === 0 && (
+            {filteredItems.length === 0 && (
             <div className="text-center py-12">
                 <p className="text-gray-500">No items found</p>
             </div>

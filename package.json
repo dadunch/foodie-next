@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint"
   },
   "dependencies": {
     "html5-qrcode": "^2.3.8",
@@ -14,7 +14,8 @@
     "mysql2": "^3.15.3",
     "next": "^16.0.8",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "sweetalert2": "^11.26.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
