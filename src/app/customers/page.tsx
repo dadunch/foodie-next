@@ -1,6 +1,8 @@
 'use client'
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search, ShoppingCart, Home, History } from 'lucide-react';
+import BottomNav from '@/components/BottomNav';
 
 export default function FoodieMenu() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -12,6 +14,7 @@ export default function FoodieMenu() {
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
     const [tableInfo] = useState({ id: 1, nama_meja: 'A-01' });
+    const router = useRouter();
 
     
     const [merchants, setmerchants] = useState<any[]>([]);
@@ -78,9 +81,8 @@ export default function FoodieMenu() {
     };
 
     const handleItemClick = (item : any) => {
-        // In real app: navigate to detail page
-        console.log('Navigate to detail:', item);
-        alert(`Opening detail for: ${item.nama_item}`);
+        //customers/id
+        router.push(`/customers/${item.id}`);
     };
 
     const handleLogin = () => {
@@ -227,31 +229,7 @@ export default function FoodieMenu() {
         )}
 
         {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-            <div className="flex justify-around items-center h-16">
-            <button className="flex flex-col items-center gap-1 text-green-500">
-                <Home className="w-5 h-5" />
-                <span className="text-xs font-medium">Home</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-gray-500 hover:text-green-500 transition-colors">
-                <Search className="w-5 h-5" />
-                <span className="text-xs">Search</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-gray-500 hover:text-green-500 transition-colors relative">
-                <ShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                <span className="absolute top-0 right-3 w-4 h-4 bg-green-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {cartCount}
-                </span>
-                )}
-                <span className="text-xs">Cart</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-gray-500 hover:text-green-500 transition-colors">
-                <History className="w-5 h-5" />
-                <span className="text-xs">History</span>
-            </button>
-            </div>
-        </nav>
+        <BottomNav />
 
         {/* Login Modal */}
         {showLoginModal && (

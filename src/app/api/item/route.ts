@@ -4,10 +4,30 @@ import type { Table } from '@/types/database';
 
 export async function GET(request: Request) {
     try {
-        const tables = await query<Table>('select item.id as id, nama_item, item.deskripsi, harga_item, foto_item, nama_merchant, merchant_id, nama_kategori from item join kategori_menu on kategori_menu.id = item.kategori_menu_id join merchant on merchant.id = kategori_menu.merchant_id'); 
-        return NextResponse.json({
-        success: true,
-        data: tables
+        const tables = await query<Table>(
+            `
+            SELECT
+                item.id AS id,
+                nama_item,
+                item.deskripsi,
+                harga_item,
+                foto_item,
+                nama_merchant,
+                merchant_id,
+                nama_katalog,
+                kategori_item.kategori 
+            FROM item
+            JOIN katalog_merchant 
+                    ON katalog_merchant.id = item.katalog_merchant_id
+            JOIN merchant 
+                    ON merchant.id = katalog_merchant.merchant_id
+            JOIN kategori_item
+                    ON kategori_item."id" = item.kategori_item_id
+            `
+            );
+            return NextResponse.json({
+            success: true,
+            data: tables,
         });
     } catch (error) {
         console.error('Error fetching menu items:', error);

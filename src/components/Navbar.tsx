@@ -1,8 +1,3 @@
-/**
- * Header Component
- * Replaces the previous general Navbar with a fixed header displaying table info,
- * history access, and login/logout status.
- */
 "use client";
 
 import React, { useState } from 'react';
