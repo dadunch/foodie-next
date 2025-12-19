@@ -4,24 +4,22 @@ import type { Table } from '@/types/database';
 
 export async function GET(
     request: Request,
-    { params }: { params: Promise<{ id: string }> } // Tambahkan Promise
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await params; // Await params
+    const { id } = await params;
 
     try {
         console.log('Fetching item with ID:', id);
         
         const items = await query<Table>(
-            `
-            SELECT 
+            `SELECT 
                 item.id AS id,
-                nama_item,
+                item.nama_item,
                 item.deskripsi,
-                harga_item,
-                foto_item
+                item.harga_item,
+                item.foto_item
             FROM item
-            WHERE item.id = ?
-            `,
+            WHERE item.id = $1`,
             [id]
         );
 
