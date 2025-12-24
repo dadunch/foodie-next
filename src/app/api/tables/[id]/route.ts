@@ -11,26 +11,28 @@ export async function GET(
     try {        
         const items = await query<Table>(
             `SELECT 
-                item.id AS id,
-                item.nama_item,
-                item.deskripsi,
-                item.harga_item,
-                item.foto_item
-            FROM item
-            WHERE item.id = $1`,
+                *
+            FROM meja
+            join foodcourt on meja.foodcourt_id = foodcourt.id
+            WHERE meja.id = $1`,
             [id]
         );
+
+        console.log('Query result:', items);
+
         if (items.length === 0) {
             return NextResponse.json(
                 { success: false, error: 'Item not found' },
                 { status: 404 }
             );
         }
+
         return NextResponse.json({
             success: true,
             data: items[0],
         });
     } catch (error) {
+        console.error('Full error details:', error);
         return NextResponse.json(
             { 
                 success: false, 

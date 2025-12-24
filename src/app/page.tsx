@@ -10,14 +10,22 @@ export default function FoodieQRScanner() {
     const [error, setError] = useState<string | null>(null);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
+    // remove all cache
     useEffect(() => {
-        const mockTables = [
-            { id: 1, nama_meja: '1' },
-            { id: 2, nama_meja: '2' },
-            { id: 3, nama_meja: '3' },
-            { id: 4, nama_meja: '4' },
-            { id: 5, nama_meja: '5' }
-        ];
+        const mockTables = Array;
+        const fetchMenuItems = async () => {
+            try {
+                const response = await fetch('/api/tables');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch menu items');
+                }
+                const result = await response.json();
+                setTables(result.data ?? []);
+            } catch (error) {
+            console.error('Error fetching menu items:', error);
+            }
+        };
+        fetchMenuItems();
         setTables(mockTables);
     }, []);
 
@@ -29,11 +37,22 @@ export default function FoodieQRScanner() {
             }
         };
     }, []);
+    const clearAllTableCache = () => {
+        Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith('table_')) {
+            sessionStorage.removeItem(key);
+            }
+        });
+    };
 
     const handleTableClick = (tableId: number) => {
-        const encodedId = btoa(tableId.toString());
+        clearAllTableCache();
+        const encodedId1 = btoa(tableId.toString());
+        const encodedId2 = btoa(encodedId1 + '_foodie');
+        const encodedId3 = btoa(encodedId2 + '_restaurant');
+        const encodedId = btoa(encodedId3 + '_order');
         // alert(`Navigating to Table ${tableId} (encoded: ${encodedId})`);
-        window.location.href = `/customers`;
+        window.location.href = `/customers?table=${encodedId}`;
     };
 
     const startScanning = () => {
@@ -87,6 +106,7 @@ export default function FoodieQRScanner() {
     };
 
     return (
+        
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo */}

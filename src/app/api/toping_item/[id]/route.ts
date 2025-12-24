@@ -11,13 +11,9 @@ export async function GET(
     try {        
         const items = await query<Table>(
             `SELECT 
-                item.id AS id,
-                item.nama_item,
-                item.deskripsi,
-                item.harga_item,
-                item.foto_item
-            FROM item
-            WHERE item.id = $1`,
+                *
+            FROM toping_item
+            WHERE toping_item.item_id = $1`,
             [id]
         );
         if (items.length === 0) {

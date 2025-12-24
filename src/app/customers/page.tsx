@@ -1,8 +1,11 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ShoppingCart, Home, History } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
+// import { useParams, useRouter } from 'next/navigation';
+
+
 
 export default function FoodieMenu() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -13,22 +16,27 @@ export default function FoodieMenu() {
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [loginEmail, setLoginEmail] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
-    const [tableInfo] = useState({ id: 1, nama_meja: 'A-01' });
+    // const [tableInfo] = useState({ id: 1, nama_meja: 'A-01' });
     const router = useRouter();
+
+    const searchParams = useSearchParams();
+    const tableParam = searchParams.get('table');
 
     
     const [merchants, setmerchants] = useState<any[]>([]);
     const [menuItems, setMenuItems] = useState<any[]>([]);
     
     useEffect(() => {
+        // console.log(sessionStorage);
+        const foodcourtId = sessionStorage.getItem('foodcourt_id');
         const fetchMenuItems = async () => {
             try {
-            const response = await fetch('/api/item');
-            if (!response.ok) {
-                throw new Error('Failed to fetch menu items');
-            }
-            const result = await response.json();
-            setMenuItems(result.data ?? []);
+                const response = await fetch(`/api/item?foodcourt_id=${foodcourtId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch menu items');
+                }
+                const result = await response.json();
+                setMenuItems(result.data ?? []);
             } catch (error) {
             console.error('Error fetching menu items:', error);
             }
@@ -37,7 +45,7 @@ export default function FoodieMenu() {
 
         const fetchMerchants = async () => {
             try {
-            const response = await fetch('/api/merchant');
+            const response = await fetch('/api/merchant?foodcourt_id=' + foodcourtId);
             if (!response.ok) {
                 throw new Error('Failed to fetch merchants');
             }
@@ -82,7 +90,8 @@ export default function FoodieMenu() {
 
     const handleItemClick = (item : any) => {
         //customers/id
-        router.push(`/customers/${item.id}`);
+        // router.push(`/customers/${item.id}?table=${useParams.table}`);
+        router.push(`/customers/${item.id}?table=${tableParam}`);
     };
 
     const handleLogin = () => {

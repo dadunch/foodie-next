@@ -21,8 +21,9 @@ export default function FoodieQRScanner() {
 
     const handleTableClick = (tableId) => {
         const encodedId = btoa(tableId.toString());
-        // In real app: window.location.href = `/customer?table=${encodedId}`;
-        alert(`Navigating to Table ${tableId}`);
+        // In real app: 
+        window.location.href = `/customer?table=${encodedId}`;
+        // alert(`Navigating to Table ${encodedId}`);
     };
 
     const startScanning = () => {

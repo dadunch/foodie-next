@@ -13,29 +13,56 @@ interface ItemData {
     foto_item: string;
 }
 
+interface ToppingData {
+    id: string;
+    item_id: string;
+    nama_toping: string;
+    harga: number;
+}
+
 export default function ItemDetail() {
     const router = useRouter();
     const params = useParams();
 
     const [quantity, setQuantity] = useState(1);
-    const [extraRice, setExtraRice] = useState(false);
-    const [extraSauce, setExtraSauce] = useState(false);
     const [notes, setNotes] = useState('');
     const [itemData, setItemData] = useState<ItemData | null>(null);
+    const [toppings, setToppings] = useState<ToppingData[]>([]);
+    const [selectedToppings, setSelectedToppings] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
-    const [tableId, setTableId] = useState('1');
-    const [tableName, setTableName] = useState('Table 1');
+    const [tableId, setTableId] = useState('');
+    const [tableName, setTableName] = useState('');
 
     useEffect(() => {
-        const fetchItemData = async () => {
+        // Ambil meja_id dari sessionStorage
+        const mejaId = sessionStorage.getItem('meja_id');
+        const mejaName = sessionStorage.getItem('table_name') || 'Table 1';
+        
+        if (!mejaId) {
+            Swal.fire({
+                title: 'Error!',
+                text: 'Meja belum dipilih. Silakan pilih meja terlebih dahulu.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#50C878'
+            }).then(() => {
+                router.push('/'); // Redirect ke halaman pemilihan meja
+            });
+            return;
+        }
+
+        setTableId(mejaId);
+        setTableName(mejaName);
+
+        const fetchData = async () => {
             try {
                 const itemId = params.id;
-                const response = await fetch(`/api/item/${itemId}`);
-                const result = await response.json();
+                
+                // Fetch item data
+                const itemResponse = await fetch(`/api/item/${itemId}`);
+                const itemResult = await itemResponse.json();
 
-                if (result.success) {
-                    setItemData(result.data);
-                } else {
+                if (!itemResult.success) {
                     Swal.fire({
                         title: 'Error!',
                         text: 'Item tidak ditemukan',
@@ -45,7 +72,28 @@ export default function ItemDetail() {
                     }).then(() => {
                         router.back();
                     });
+                    return;
                 }
+
+                setItemData(itemResult.data);
+
+                // Fetch toppings data
+                try {
+                    const toppingResponse = await fetch(`/api/toping_item/${itemId}`);
+                    const toppingResult = await toppingResponse.json();
+                    
+                    if (toppingResult.success) {
+                        // Jika data adalah object tunggal, ubah ke array
+                        const toppingArray = Array.isArray(toppingResult.data) 
+                            ? toppingResult.data 
+                            : [toppingResult.data];
+                        setToppings(toppingArray);
+                    }
+                } catch (toppingError) {
+                    console.log('No toppings available for this item');
+                    // Tidak perlu error handling, item bisa saja tidak punya topping
+                }
+
             } catch (error) {
                 console.error('Fetch Error:', error);
                 Swal.fire({
@@ -62,15 +110,22 @@ export default function ItemDetail() {
             }
         };
 
-        fetchItemData();
+        fetchData();
     }, [params.id, router]);
 
     const calculateTotal = () => {
         if (!itemData) return 0;
         const itemPrice = parseFloat(itemData.harga_item);
         let total = quantity * itemPrice;
-        if (extraRice) total += 5000;
-        if (extraSauce) total += 3000;
+        
+        // Tambahkan harga topping yang dipilih
+        selectedToppings.forEach(toppingId => {
+            const topping = toppings.find(t => t.id === toppingId);
+            if (topping) {
+                total += topping.harga * quantity;
+            }
+        });
+        
         return total;
     };
 
@@ -80,6 +135,16 @@ export default function ItemDetail() {
 
     const decreaseQuantity = () => {
         if (quantity > 1) setQuantity(quantity - 1);
+    };
+
+    const toggleTopping = (toppingId: string) => {
+        setSelectedToppings(prev => {
+            if (prev.includes(toppingId)) {
+                return prev.filter(id => id !== toppingId);
+            } else {
+                return [...prev, toppingId];
+            }
+        });
     };
 
     const confirmAdd = () => {
@@ -105,11 +170,13 @@ export default function ItemDetail() {
         if (!itemData) return;
 
         const formData = new FormData();
-        formData.append('table_id', tableId);
+        formData.append('meja_id', tableId);
         formData.append('item_id', itemData.id.toString());
         formData.append('quantity', quantity.toString());
-        formData.append('extra_rice', extraRice ? '1' : '0');
-        formData.append('extra_sauce', extraSauce ? '1' : '0');
+        
+        // Kirim topping yang dipilih sebagai JSON string
+        formData.append('toppings', JSON.stringify(selectedToppings));
+        
         formData.append('notes', notes);
         formData.append('price', `Rp ${calculateTotal().toLocaleString('id-ID')}`);
 
@@ -128,6 +195,11 @@ export default function ItemDetail() {
                     icon: 'success',
                     confirmButtonText: 'OK',
                     confirmButtonColor: '#50C878'
+                }).then(() => {
+                    // Reset form
+                    setQuantity(1);
+                    setSelectedToppings([]);
+                    setNotes('');
                 });
             } else {
                 Swal.fire({
@@ -256,37 +328,36 @@ export default function ItemDetail() {
                     </div>
                 </div>
 
-                {/* Extras Section */}
-                <div className="bg-white rounded-lg p-6 shadow-lg mb-5">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-5 flex items-center gap-3">
-                        <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-                        </svg>
-                        Extras
-                    </h3>
-                    <div className="space-y-4">
-                        <label className="bg-gray-100 rounded-xl p-4 flex items-center cursor-pointer hover:bg-green-200 border-1 border-transparent hover:border-green-400 transition-all">
-                            <input
-                                type="checkbox"
-                                checked={extraRice}
-                                onChange={(e) => setExtraRice(e.target.checked)}
-                                className="w-6 h-6 mr-4 accent-green-300"
-                            />
-                            <span className="flex-1 font-medium text-gray-800">Extra Rice</span>
-                            <span className="text-green-600 font-semibold">+Rp 5,000</span>
-                        </label>
-                        <label className="bg-gray-100 rounded-xl p-4 flex items-center cursor-pointer hover:bg-green-200 border-1 border-transparent hover:border-green-400 transition-all">
-                            <input
-                                type="checkbox"
-                                checked={extraSauce}
-                                onChange={(e) => setExtraSauce(e.target.checked)}
-                                className="w-6 h-6 mr-4 accent-green-300"
-                            />
-                            <span className="flex-1 font-medium text-gray-800">Extra Sauce</span>
-                            <span className="text-green-600 font-semibold">+Rp 3,000</span>
-                        </label>
+                {/* Extras/Toppings Section */}
+                {toppings.length > 0 && (
+                    <div className="bg-white rounded-lg p-6 shadow-lg mb-5">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-5 flex items-center gap-3">
+                            <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                            </svg>
+                            Extras
+                        </h3>
+                        <div className="space-y-4">
+                            {toppings.map((topping) => (
+                                <label 
+                                    key={topping.id}
+                                    className="bg-gray-100 rounded-xl p-4 flex items-center cursor-pointer hover:bg-green-200 border-1 border-transparent hover:border-green-400 transition-all"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedToppings.includes(topping.id)}
+                                        onChange={() => toggleTopping(topping.id)}
+                                        className="w-6 h-6 mr-4 accent-green-300"
+                                    />
+                                    <span className="flex-1 font-medium text-gray-800">{topping.nama_toping}</span>
+                                    <span className="text-green-600 font-semibold">
+                                        +Rp {topping.harga.toLocaleString('id-ID')}
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Notes Section */}
                 <div className="bg-white rounded-lg p-6 shadow-lg mb-5">
