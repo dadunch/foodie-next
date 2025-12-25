@@ -36,7 +36,7 @@ export default function ItemDetail() {
     useEffect(() => {
         // Ambil meja_id dari sessionStorage
         const mejaId = sessionStorage.getItem('meja_id');
-        const mejaName = sessionStorage.getItem('table_name') || 'Table 1';
+        const mejaName = sessionStorage.getItem('table_name') || 'Table 21';
         
         if (!mejaId) {
             Swal.fire({

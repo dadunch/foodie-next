@@ -19,6 +19,142 @@ interface KeranjangItem {
     created_at: string;
 }
 
+export async function GET(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+
+        const encodedIda = searchParams.get('table');
+            if (!encodedIda) {
+                return NextResponse.json({
+                    success: false,
+                    message: 'Table ID is required'
+                }, { status: 400 });
+            }
+
+            const step3 = atob(encodedIda).replace('_order', '');
+            const step2 = atob(step3).replace('_restaurant', '');
+            const step1 = atob(step2).replace('_foodie', '');
+            const tableId = Number(atob(step1));
+
+        if (!tableId) {
+            return NextResponse.json({
+                success: false,
+                message: 'Invalid Table ID'
+            }, { status: 400 });
+        }
+
+        // Validasi input
+        if (!tableId) {
+        return NextResponse.json({
+            success: false,
+            message: 'Table ID is required'
+        }, { status: 400 });
+        }
+
+        // Query untuk mendapatkan data keranjang dengan join
+        const cartQuery = `
+        SELECT 
+            keranjang_item.id,
+            keranjang_item.keranjang_id,
+            keranjang_item.item_id,
+            keranjang_item.jumlah,
+            keranjang_item.harga,
+            keranjang_item.catatan,
+            keranjang_item.topping_ids,
+            item.nama_item,
+            item.foto_item
+        FROM keranjang
+        JOIN keranjang_item ON keranjang_item.keranjang_id = keranjang.id
+        JOIN item ON item.id = keranjang_item.item_id
+        WHERE keranjang.meja_id = $1 
+            AND keranjang.created_at >= NOW() - INTERVAL '200 minutes'
+        ORDER BY keranjang_item.id ASC
+        `;
+
+        const cartItems = await query(cartQuery, [tableId]);
+
+        // Query untuk mendapatkan info meja
+        const tableQuery = `
+        SELECT id, nama_meja 
+        FROM meja 
+        WHERE id = $1
+        `;
+
+        const tableResult = await query(tableQuery, [tableId]);
+
+        if (tableResult.length === 0) {
+        return NextResponse.json({
+            success: false,
+            message: 'Table not found'
+        }, { status: 404 });
+        }
+
+        // Proses items dengan toppings
+        const items = await Promise.all(
+        cartItems.map(async (row) => {
+            let toppings = Array<{ id: string; nama_toping: string; harga: number }>();
+
+            // Jika ada topping_ids, ambil data toppingnya
+            if (row.topping_ids && Array.isArray(row.topping_ids) && row.topping_ids.length > 0) {
+            // Query toppings berdasarkan IDs
+            const toppingQuery = `
+                SELECT 
+                id,
+                nama_toping,
+                harga
+                FROM toping_item
+                WHERE id = ANY($1::int[])
+            `;
+
+            const toppingResult = await query(toppingQuery, [row.topping_ids]);
+            
+            toppings = toppingResult.map(topping => ({
+                id: topping.id.toString(),
+                nama_toping: topping.nama_toping,
+                harga: topping.harga
+            }));
+            }
+
+            // Hitung total harga toppings
+            const toppingTotal = toppings.reduce((sum, topping) => sum + topping.harga, 0);
+            
+            // Total harga = (harga × jumlah) + harga_topping
+            const totalHarga = (row.harga * row.jumlah) + toppingTotal;
+
+            return {
+            id: row.id,
+            cart_id: row.keranjang_id,
+            item_id: row.item_id,
+            nama_item: row.nama_item,
+            jumlah: row.jumlah,
+            harga: totalHarga,
+            catatan: row.catatan || '',
+            foto_item: row.foto_item || '',
+            toppings: toppings
+            };
+        })
+        );
+
+        // Response
+        return NextResponse.json({
+        success: true,
+        items: items,
+        tableInfo: {
+            id: tableResult[0].id,
+            nama_meja: tableResult[0].nama_meja
+        }
+        });
+
+    } catch (error) {
+        console.error('Error fetching cart:', error);
+        return NextResponse.json({
+        success: false,
+        message: 'Failed to fetch cart',
+        details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 });
+    }
+}
+
 export async function POST(request: Request) {
     try {
         const formData = await request.formData();

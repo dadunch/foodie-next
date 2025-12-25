@@ -13,7 +13,7 @@ export default function BottomNav() {
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-white flex justify-around py-3 shadow-lg z-50 border-t border-gray-200">
             <button 
-                onClick={() => router.push('/customers')} 
+                onClick={() => router.push('/customers?table=' + sessionStorage.getItem('table_url'))} 
                 className={`flex flex-col items-center transition-colors p-2 ${
                     isActive('/') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}
@@ -37,7 +37,7 @@ export default function BottomNav() {
             </button>
 
             <button 
-                onClick={() => router.push('/cart')} 
+                onClick={() => router.push('/customers/cart?table=' + sessionStorage.getItem('table_url'))} 
                 className={`flex flex-col items-center transition-colors p-2 ${
                     isActive('/cart') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}

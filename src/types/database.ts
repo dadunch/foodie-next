@@ -1,4 +1,4 @@
-export interface Table {
+export  interface Table {
     id: number;
     nama_meja: string;
     status?: string;
@@ -29,4 +29,23 @@ export interface User {
     email: string;
     nama: string;
     password?: string;
+}
+
+
+export interface Keranjang {
+    id: number;
+    meja_id: number;
+    pelanggan_id: number | null;
+    created_at: string;
+}
+
+export interface KeranjangItem {
+    id: number;
+    keranjang_id: number;
+    item_id: number;
+    jumlah: number;
+    harga: number;
+    topping_ids: string[] | null;
+    catatan: string | null;
+    created_at: string;
 }

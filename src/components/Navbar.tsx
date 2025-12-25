@@ -124,10 +124,9 @@ export default function Header() {
             });
     
             setLoading(false);
-            return; // ⛔ STOP, tidak call API
+            return; 
             }
     
-            // 🔵 FETCH API JIKA TIDAK ADA CACHE
             const response = await fetch(`/api/tables/${decodedTableId}`);
             const result = await response.json();
     
@@ -147,6 +146,9 @@ export default function Header() {
             );
             sessionStorage.setItem('foodcourt_id', result.data.foodcourt_id);
             sessionStorage.setItem('meja_id', result.data.id);
+            sessionStorage.setItem('table_name', result.data.nama_meja);
+            sessionStorage.setItem('table_url', encodedIda);
+            
             } else {
             Swal.fire({
                 title: 'Error!',
@@ -193,7 +195,7 @@ export default function Header() {
                             <img
                                 src="/logo/LogoFoodie.png"
                                 alt="Foodie Logo"
-                                className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0"
+                                className="w-20 h-20 sm:w-30 sm:h-30 object-contain flex-shrink-0"
                             />
                             
                             <div className="flex flex-col min-w-0 flex-1">
