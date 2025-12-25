@@ -90,7 +90,6 @@ export default function ItemDetail() {
                         setToppings(toppingArray);
                     }
                 } catch (toppingError) {
-                    console.log('No toppings available for this item');
                     // Tidak perlu error handling, item bisa saja tidak punya topping
                 }
 

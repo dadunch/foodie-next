@@ -18,8 +18,6 @@ export async function GET(
             [id]
         );
 
-        console.log('Query result:', items);
-
         if (items.length === 0) {
             return NextResponse.json(
                 { success: false, error: 'Item not found' },

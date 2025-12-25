@@ -27,7 +27,6 @@ export default function FoodieMenu() {
     const [menuItems, setMenuItems] = useState<any[]>([]);
     
     useEffect(() => {
-        // console.log(sessionStorage);
         const foodcourtId = sessionStorage.getItem('foodcourt_id');
         const fetchMenuItems = async () => {
             try {

@@ -12,7 +12,6 @@ const LoginModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Attempting login with:', username, password);
         alert('Login attempted. Replace this with real authentication logic.');
         onClose();
     };
@@ -97,8 +96,24 @@ export default function Header() {
             }
     
             // 🔓 decode
-            const step3 = atob(encodedIda).replace('_order', '');
-            const step2 = atob(step3).replace('_restaurant', '');
+            // const dateNow = new Date().getTime();
+            // const step3 = atob(encodedIda).replace(dateNow.toString(), '');
+            // const step2 = atob(step3).replace('_restaurant', '');
+            // const step1 = atob(step2).replace('_foodie', '');
+            // const decodedTableId = Number(atob(step1));
+
+
+            const decodedFinal = atob(encodedIda);
+
+            // pisahkan payload & tanggal
+            const [encodedPart, datePart] = decodedFinal.split('|');
+
+            // validasi tanggal (opsional)
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+                throw new Error('Tanggal tidak valid');
+            }
+
+            const step2 = atob(encodedPart).replace('_restaurant', '');
             const step1 = atob(step2).replace('_foodie', '');
             const decodedTableId = Number(atob(step1));
     
@@ -175,16 +190,12 @@ export default function Header() {
     const handleLogout = () => {
         if (window.confirm('Are you sure you want to log out?')) {
             setIsLoggedIn(false);
-            console.log("Logged out successfully.");
         }
     };
     
     const handleHistoryClick = () => {
         alert('Navigating to Order History...');
     };
-
-    console.log('Rendering Navbar - tableInfo:', tableInfo);
-
     return (
         <>
             <header className="bg-white shadow-lg sticky top-0 z-50">

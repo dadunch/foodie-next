@@ -31,10 +31,25 @@ export async function GET(request: Request) {
                 }, { status: 400 });
             }
 
-            const step3 = atob(encodedIda).replace('_order', '');
-            const step2 = atob(step3).replace('_restaurant', '');
+            // const step3 = atob(encodedIda).replace('_order', '');
+            // const step2 = atob(step3).replace('_restaurant', '');
+            // const step1 = atob(step2).replace('_foodie', '');
+            // const tableId = Number(atob(step1));
+            
+            const decodedFinal = atob(encodedIda);
+
+            // pisahkan payload & tanggal
+            const [encodedPart, datePart] = decodedFinal.split('|');
+
+            // validasi tanggal (opsional)
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+                throw new Error('Tanggal tidak valid');
+            }
+
+            const step2 = atob(encodedPart).replace('_restaurant', '');
             const step1 = atob(step2).replace('_foodie', '');
             const tableId = Number(atob(step1));
+
 
         if (!tableId) {
             return NextResponse.json({
@@ -58,7 +73,8 @@ export async function GET(request: Request) {
             keranjang_item.keranjang_id,
             keranjang_item.item_id,
             keranjang_item.jumlah,
-            keranjang_item.harga,
+            item.harga_item as harga_item,
+            keranjang_item.harga as harga_total,
             keranjang_item.catatan,
             keranjang_item.topping_ids,
             item.nama_item,
@@ -115,11 +131,6 @@ export async function GET(request: Request) {
             }));
             }
 
-            // Hitung total harga toppings
-            const toppingTotal = toppings.reduce((sum, topping) => sum + topping.harga, 0);
-            
-            // Total harga = (harga × jumlah) + harga_topping
-            const totalHarga = (row.harga * row.jumlah) + toppingTotal;
 
             return {
             id: row.id,
@@ -127,7 +138,8 @@ export async function GET(request: Request) {
             item_id: row.item_id,
             nama_item: row.nama_item,
             jumlah: row.jumlah,
-            harga: totalHarga,
+            harga: row.harga_item,
+            totalHarga: row.harga_total,
             catatan: row.catatan || '',
             foto_item: row.foto_item || '',
             toppings: toppings
@@ -261,6 +273,51 @@ export async function POST(request: Request) {
         return NextResponse.json({
             status: 'error',
             message: 'Terjadi kesalahan server',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const cartItemId = searchParams.get('cart_item_id');
+        
+        if (!cartItemId) {
+            return NextResponse.json({
+                status: 'error',
+                message: 'cart_item_id is required'
+            }, { status: 400 });
+        }
+
+        // Validasi apakah cart item ada
+        const checkItem = await query(
+            `SELECT id FROM keranjang_item WHERE id = $1`,
+            [parseInt(cartItemId)]
+        );
+
+        if (checkItem.length === 0) {
+            return NextResponse.json({
+                status: 'error',
+                message: 'Item tidak ditemukan'
+            }, { status: 404 });
+        }
+
+        // Hapus item dari keranjang
+        await query(
+            `DELETE FROM keranjang_item WHERE id = $1`,
+            [parseInt(cartItemId)]
+        );
+        
+        return NextResponse.json({
+            status: 'success',
+            message: 'Item berhasil dihapus dari keranjang'
+        }, { status: 200 });
+    } catch (error) {
+        console.error('Error deleting cart item:', error);
+        return NextResponse.json({
+            status: 'error',
+            message: 'Gagal menghapus item dari keranjang',
             error: error instanceof Error ? error.message : 'Unknown error'
         }, { status: 500 });
     }

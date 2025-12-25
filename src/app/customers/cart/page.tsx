@@ -12,7 +12,15 @@ export default function CartPage() {
     const mejaName = sessionStorage.getItem('table_name') || 'Table 21';
 
     
-    const [cartItems, setCartItems] = useState<{ id: number; harga: number; [key: string]: any }[]>([]);
+    const [cartItems, setCartItems] = useState<{ 
+        id: number; 
+        harga: number; 
+        nama_item: string; 
+        jumlah: number; 
+        toppings?: { id: number; nama_toping: string; harga: number }[]; 
+        catatan?: string; 
+        [key: string]: any 
+    }[]>([]);
     const [tableInfo, setTableInfo] = useState(null);
     const [additionalNotes, setAdditionalNotes] = useState('');
     const [loading, setLoading] = useState(true);
@@ -49,8 +57,14 @@ export default function CartPage() {
     };
 
     // Calculate totals
-    const subtotal = cartItems.reduce((sum, item) => sum + item.harga, 0);
-    const tax = subtotal * 0.1;
+    // const subtotal = cartItems.reduce((sum, item) => sum + item.totalHarga.integer() , 0);
+    const subtotal = cartItems.reduce((sum, item) => {
+        const total = item.totalHarga
+            ? Number(item.totalHarga)
+            : Number(item.harga) * Number(item.jumlah);
+        return sum + total;
+    }, 0);
+    const tax = subtotal * 0.12;
     const grandTotal = subtotal + tax;
 
     // Format currency
@@ -77,27 +91,26 @@ export default function CartPage() {
 
         if (result.isConfirmed) {
             try {
-                const response = await fetch('/api/cart/delete', {
-                    method: 'POST',
+                const response = await fetch(`/api/cart?cart_item_id=${itemId}`, {
+                    method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ cartId, itemId })
+                    }
                 });
 
                 const data = await response.json();
 
-                if (data.success) {
+                if (data.success === true || data.status === 'success') {
                     Swal.fire({
                         title: 'Berhasil!',
-                        text: 'Item berhasil dihapus dari keranjang.',
+                        text: data.message || 'Item berhasil dihapus.',
                         icon: 'success',
                         timer: 2000,
                         showConfirmButton: false
                     });
-                    fetchCartData(); // Refresh cart
+                    fetchCartData();
                 } else {
-                    throw new Error(data.message);
+                    throw new Error(data.message || 'Gagal menghapus item');
                 }
             } catch (error) {
                 Swal.fire({
@@ -121,7 +134,7 @@ export default function CartPage() {
         }
 
         try {
-            const response = await fetch('/api/order/create', {
+            const response = await fetch('/api/order', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -200,48 +213,59 @@ export default function CartPage() {
                             <h2 className="text-xl font-semibold mb-4">Item Pesanan</h2>
                             <div className="space-y-3">
                                 {cartItems.map((item) => (
-                                    <div key={item.id} className="bg-gray-50 rounded-lg p-4">
+                                    <div key={item.id} className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
                                         <div className="flex justify-between items-start gap-4">
                                             <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="font-semibold text-green-500">
+                                                {/* Header Item */}
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <span className="bg-green-100 text-green-700 font-bold px-3 py-1 rounded-full text-sm">
                                                         {item.jumlah}x
                                                     </span>
-                                                    <span className="font-medium">{item.nama_item}</span>
+                                                    <div className="flex-1">
+                                                        <h4 className="font-semibold text-gray-900 text-base">{item.nama_item}</h4>
+                                                        <p className="text-sm text-gray-500 mt-0.5">{formatRupiah(item.harga)} /item</p>
+                                                    </div>
                                                 </div>
                                                 
                                                 {/* Toppings */}
                                                 {item.toppings && item.toppings.length > 0 && (
-                                                    <div className="ml-6 mb-2">
-                                                        <p className="text-sm font-medium text-gray-600 mb-1">Topping:</p>
-                                                        {item.toppings.map((topping) => (
-                                                            <div key={topping.id} className="flex items-center justify-between text-sm text-gray-600">
-                                                                <span>• {topping.nama_toping}</span>
-                                                                <span className="text-gray-500">+{formatRupiah(topping.harga)}</span>
-                                                            </div>
-                                                        ))}
+                                                    <div className="ml-2 pl-4 border-l-2 border-green-200 mb-3">
+                                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Topping</p>
+                                                        <div className="space-y-1.5">
+                                                            {item.toppings.map((topping) => (
+                                                                <div key={topping.id} className="flex items-center justify-between text-sm">
+                                                                    <span className="text-gray-700">• {topping.nama_toping}</span>
+                                                                    <span className="text-green-600 font-medium">+{formatRupiah(topping.harga)}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 )}
-
+                                    
                                                 {/* Catatan */}
                                                 {item.catatan && (
-                                                    <div className="ml-6 flex items-start gap-2 text-sm text-gray-600">
-                                                        <span className="font-medium">Catatan:</span>
-                                                        <span>{item.catatan}</span>
+                                                    <div className="ml-2 pl-4 border-l-2 border-amber-200 bg-amber-50 -ml-2 p-3 rounded-r-lg">
+                                                        <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">Catatan</p>
+                                                        <p className="text-sm text-gray-700 italic">{item.catatan}</p>
                                                     </div>
                                                 )}
                                             </div>
                                             
-                                            <div className="flex items-center gap-4">
-                                                <span className="font-semibold text-lg whitespace-nowrap">
-                                                    {formatRupiah(item.harga)}
-                                                </span>
+                                            {/* Total & Delete Button */}
+                                            <div className="flex flex-col items-end gap-3">
+                                                <div className="text-right">
+                                                    <p className="text-xs text-gray-500 mb-1">Total</p>
+                                                    <span className="font-bold text-xl text-gray-900">
+                                                        {formatRupiah(item.totalHarga)}
+                                                    </span>
+                                                </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleDeleteItem(item.cart_id, item.id, item.nama_item)}
-                                                    className="text-red-500 hover:text-red-700 transition-colors"
+                                                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors group"
+                                                    title="Hapus item"
                                                 >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
                                                 </button>
@@ -273,7 +297,7 @@ export default function CartPage() {
                                     <span>{formatRupiah(subtotal)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-700">
-                                    <span>Pajak (10%)</span>
+                                    <span>PPN (12%)</span>
                                     <span>{formatRupiah(tax)}</span>
                                 </div>
                                 <div className="flex justify-between text-xl font-bold pt-3 border-t">
@@ -287,10 +311,10 @@ export default function CartPage() {
                         <div className="flex gap-4">
                             <button
                                 type="button"
-                                onClick={() => router.push(`/?table=${table}`)}
+                                onClick={() => router.push(`/customers/?table=${table}`)}
                                 className="flex-1 bg-white text-green-500 border-2 border-green-500 py-4 rounded-lg font-semibold hover:bg-green-50 transition-colors"
                             >
-                                Tambah Item
+                                Tambah Jajanan
                             </button>
                             <button
                                 type="button"

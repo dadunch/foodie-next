@@ -47,11 +47,12 @@ export default function FoodieQRScanner() {
 
     const handleTableClick = (tableId: number) => {
         clearAllTableCache();
-        const encodedId1 = btoa(tableId.toString());
-        const encodedId2 = btoa(encodedId1 + '_foodie');
-        const encodedId3 = btoa(encodedId2 + '_restaurant');
-        const encodedId = btoa(encodedId3 + '_order');
-        // alert(`Navigating to Table ${tableId} (encoded: ${encodedId})`);
+        const today = new Date().toISOString().slice(0, 10);
+        const step1 = btoa(tableId.toString());
+        const step2 = btoa(step1 + '_foodie');
+        const step3 = btoa(step2 + '_restaurant');
+        const encodedId = btoa(`${step3}|${today}`);
+        
         window.location.href = `/customers?table=${encodedId}`;
     };
 
@@ -76,7 +77,6 @@ export default function FoodieQRScanner() {
 
                 scanner.render(
                     (decodedText) => {
-                        console.log('QR Code scanned:', decodedText);
                         scanner.clear().then(() => {
                             setScanning(false);
                             scannerRef.current = null;
