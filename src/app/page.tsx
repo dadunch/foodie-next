@@ -3,12 +3,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, Camera, User, Store, X } from 'lucide-react';
 import { Html5QrcodeScanner } from "html5-qrcode";
+import { v4 as uuidv4 } from 'uuid';
 
 export default function FoodieQRScanner() {
     const [tables, setTables] = useState<{ id: number; nama_meja: string }[]>([]);
     const [scanning, setScanning] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+
+
+    let deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+    deviceId = uuidv4();
+    localStorage.setItem('device_id', deviceId);
+    }
 
     // remove all cache
     useEffect(() => {
@@ -133,11 +141,11 @@ export default function FoodieQRScanner() {
 
     return (
         
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-red-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-orange-500 to-red-500 rounded-3xl shadow-xl mb-4 transform hover:scale-105 transition-transform">
+                    <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-500 to-green-500 rounded-3xl shadow-xl mb-4 transform hover:scale-105 transition-transform">
                         <QrCode className="w-12 h-12 text-white" />
                     </div>
                     <h1 className="text-4xl font-bold text-gray-800">Foodie</h1>
@@ -166,7 +174,7 @@ export default function FoodieQRScanner() {
                         <div className="relative mb-6">
                             <button
                                 onClick={stopScanning}
-                                className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg"
+                                className="absolute top-2 right-2 z-10 bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-lg"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -175,7 +183,7 @@ export default function FoodieQRScanner() {
                     )}
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm">
+                        <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg text-green-700 text-sm">
                             {error}
                         </div>
                     )}
@@ -193,7 +201,7 @@ export default function FoodieQRScanner() {
                             <button
                                 key={table.id}
                                 onClick={() => handleTableClick(table)} // Pass seluruh object
-                                className="bg-gradient-to-br from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all text-sm"
+                                className="bg-gradient-to-br from-green-500 to-green-500 hover:from-green-600 hover:to-green-600 text-white font-bold py-3 px-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all text-sm"
                             >
                                 {table.nama_meja}
                             </button>

@@ -80,8 +80,7 @@ export default function CheckoutPage() {
     const getPaymentMethodId = (method: string) => {
         const methodMap: { [key: string]: number } = {
             'CASH': 1,
-            'Qris': 2,
-            'FoodiePay': 3
+            'Qris': 2
         };
         return methodMap[method] || 1;
     };
@@ -201,32 +200,6 @@ export default function CheckoutPage() {
                             )}
                         </label>
 
-                        {/* FoodiePay */}
-                        <label 
-                            className={`relative flex flex-col items-center p-6 border-2 rounded-xl cursor-pointer transition-all ${
-                                paymentMethod === 'foodiePay' 
-                                    ? 'border-green-500 bg-green-50' 
-                                    : 'border-gray-200 hover:border-green-300'
-                            }`}
-                        >
-                            <input
-                                type="radio"
-                                name="payment-method"
-                                value="foodiePay"
-                                checked={paymentMethod === 'foodiePay'}
-                                onChange={(e) => setPaymentMethod(e.target.value)}
-                                className="sr-only"
-                            />
-                            <img src="/assets/logo/fpay.png" alt="FoodiePay" className="w-16 h-16 mb-3 object-contain" />
-                            <span className="font-semibold text-gray-800">FoodiePay</span>
-                            {paymentMethod === 'foodiePay' && (
-                                <div className="absolute top-3 right-3 text-green-500">
-                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                            )}
-                        </label>
 
                         {/* Qris */}
                         <label 
@@ -331,7 +304,7 @@ export default function CheckoutPage() {
                             </div>
                             <div className="flex justify-between">
                                 <strong className="text-gray-700">Metode Bayar:</strong>
-                                <span className="text-gray-900">{paymentMethod === 'CASH' ? 'Cash' : paymentMethod === 'foodiePay' ? 'FoodiePay' : 'Qris'}</span>
+                                <span className="text-gray-900">{paymentMethod === 'CASH' ? 'Cash' : 'Qris'}</span>
                             </div>
                         </div>
                         

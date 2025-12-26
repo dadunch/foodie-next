@@ -167,7 +167,7 @@ export default function ItemDetail() {
 
     const storeCard = async () => {
         if (!itemData) return;
-
+        const url_table = sessionStorage.getItem('table_url') || '';
         const formData = new FormData();
         formData.append('meja_id', tableId);
         formData.append('item_id', itemData.id.toString());
@@ -199,6 +199,7 @@ export default function ItemDetail() {
                     setQuantity(1);
                     setSelectedToppings([]);
                     setNotes('');
+                    router.push('/customers?table=' + url_table);
                 });
             } else {
                 Swal.fire({

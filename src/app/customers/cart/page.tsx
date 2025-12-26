@@ -134,6 +134,7 @@ export default function CartPage() {
         }
 
         try {
+            console.log('deviceId:', localStorage.getItem('device_id'));
             const response = await fetch('/api/order', {
                 method: 'POST',
                 headers: {
@@ -142,8 +143,10 @@ export default function CartPage() {
                 body: JSON.stringify({
                     cartId: cartItems[0]?.cart_id,
                     catatan: additionalNotes,
-                    nominalBayar: grandTotal
+                    nominalBayar: grandTotal,
+                    device_id : localStorage.getItem('device_id') || ''
                 })
+                
             });
 
             const data = await response.json();
@@ -333,7 +336,7 @@ export default function CartPage() {
                         <h2 className="text-2xl font-semibold text-gray-600 mb-2">Keranjang Kosong</h2>
                         <p className="text-gray-500 mb-6">Tambahkan menu favorit Anda!</p>
                         <button
-                            onClick={() => router.push(`/?table=${table}`)}
+                            onClick={() => router.push(`/customers/?table=${table}`)}
                             className="bg-green-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
                         >
                             Mulai Belanja

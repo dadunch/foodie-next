@@ -15,7 +15,7 @@ export default function BottomNav() {
             <button 
                 onClick={() => router.push('/customers?table=' + sessionStorage.getItem('table_url'))} 
                 className={`flex flex-col items-center transition-colors p-2 ${
-                    isActive('/') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
+                    isActive('/customers') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}
             >
                 <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">
@@ -25,9 +25,9 @@ export default function BottomNav() {
             </button>
 
             <button 
-                onClick={() => router.push('/search')}
+                onClick={() => router.push('/customers?focus=search&table=' + sessionStorage.getItem('table_url'))}
                 className={`flex flex-col items-center transition-colors p-2 ${
-                    isActive('/search') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
+                    'text-gray-500 hover:text-green-500'
                 }`}
             >
                 <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">
@@ -39,7 +39,7 @@ export default function BottomNav() {
             <button 
                 onClick={() => router.push('/customers/cart?table=' + sessionStorage.getItem('table_url'))} 
                 className={`flex flex-col items-center transition-colors p-2 ${
-                    isActive('/cart') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
+                    isActive('/customers/cart') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}
             >
                 <div className="relative">
@@ -55,7 +55,7 @@ export default function BottomNav() {
             <button 
                 onClick={() => router.push('/customers/history?table=' + sessionStorage.getItem('table_url'))} 
                 className={`flex flex-col items-center transition-colors p-2 ${
-                    isActive('/history') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
+                    isActive('/customers/history') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}
             >
                 <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">

@@ -81,6 +81,12 @@ export async function POST(request: Request) {
         const price = body.nominalBayar; // Use nominalBayar from the request
         const status = "Belum Bayar";
         const time = new Date().toISOString();
+        // const device_id = body.device_id as string || '';
+        const device_id =
+            typeof body.device_id === 'string' &&
+            /^[0-9a-fA-F-]{36}$/.test(body.device_id)
+                ? body.device_id
+                : null;
 
         // Validasi input
         if (!keranjang_id || !price) {
@@ -111,14 +117,15 @@ export async function POST(request: Request) {
                 // update existing order with new price
                 const updatedOrder = await query<Order>(
                     `UPDATE "order" 
-                        SET nominal_bayar = $1, catatan = $2, time = $3
+                        SET nominal_bayar = $1, catatan = $2, time = $3, device_id = $5
                         WHERE keranjang_id = $4
                      RETURNING *`,
                     [
                         price,
                         notes,
                         time,
-                        keranjang_id
+                        keranjang_id,
+                        device_id
                     ]
                 );
                 return NextResponse.json({
@@ -132,16 +139,31 @@ export async function POST(request: Request) {
                 });
             }
         }
+        // const orderQuery = await query<Order>(
+        //     `INSERT INTO "order" (keranjang_id, status, time, catatan, nominal_bayar, device_id) 
+        //         VALUES ($1, $2, $3, $4, $5, $6) 
+        //      RETURNING *`,
+        //     [
+        //         keranjang_id,
+        //         status,
+        //         time,
+        //         notes,
+        //         price,
+        //         device_id
+        //     ]
+        // );
         const orderQuery = await query<Order>(
-            `INSERT INTO "order" (keranjang_id, status, time, catatan, nominal_bayar) 
-                VALUES ($1, $2, $3, $4, $5) 
-             RETURNING *`,
-            [
+            `INSERT INTO "order"
+                (keranjang_id, status, time, catatan, nominal_bayar, device_id)
+                VALUES ($1, $2, $3, $4, $5, $6::uuid)
+                RETURNING *`,
+                [
                 keranjang_id,
                 status,
                 time,
                 notes,
-                price
+                price,
+                device_id
             ]
         );
 

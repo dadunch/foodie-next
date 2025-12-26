@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ShoppingCart } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
+import { useRef } from 'react';
 
 // Cache utilities
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -31,10 +32,12 @@ export default function FoodieMenu() {
     const [merchants, setMerchants] = useState<any[]>([]);
     const [menuItems, setMenuItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const searchInputRef = useRef<HTMLInputElement>(null);
     
     const router = useRouter();
     const searchParams = useSearchParams();
     const tableParam = searchParams.get('table');
+    const focusParam = searchParams.get('focus');
 
     useEffect(() => {
         const foodcourtId = sessionStorage.getItem('foodcourt_id');
@@ -88,6 +91,15 @@ export default function FoodieMenu() {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        if (focusParam === 'search') {
+            // delay kecil biar aman setelah render
+            setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 100);
+        }
+    }, [focusParam]);
+
     const formatRupiah = useCallback((price: number) => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -135,6 +147,7 @@ export default function FoodieMenu() {
             <div className="p-4 bg-white shadow-sm text-black">
                 <div className="relative">
                     <input
+                        ref={searchInputRef}
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
