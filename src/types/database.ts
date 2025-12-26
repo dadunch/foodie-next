@@ -1,4 +1,4 @@
-export  interface Table {
+export  interface Meja {
     id: number;
     nama_meja: string;
     status?: string;
@@ -31,7 +31,6 @@ export interface User {
     password?: string;
 }
 
-
 export interface Keranjang {
     id: number;
     meja_id: number;
@@ -48,4 +47,13 @@ export interface KeranjangItem {
     topping_ids: string[] | null;
     catatan: string | null;
     created_at: string;
+}
+
+export interface Order {
+    id: number;
+    keranjang_id: number;
+    status: string;
+    nominal_bayar: number;
+    time: string;
+    catatan: string | null;
 }

@@ -149,7 +149,7 @@ export default function CartPage() {
             const data = await response.json();
 
             if (data.success) {
-                router.push(`/checkout?table=${table}`);
+                router.push(`/customers/checkout?table=${table}`);
             } else {
                 throw new Error(data.message);
             }

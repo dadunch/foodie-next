@@ -1,23 +1,8 @@
 import { query } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import type { Keranjang } from '@/types/database';
+import type { KeranjangItem } from '@/types/database';
 
-interface Keranjang {
-    id: number;
-    meja_id: number;
-    pelanggan_id: number | null;
-    created_at: string;
-}
-
-interface KeranjangItem {
-    id: number;
-    keranjang_id: number;
-    item_id: number;
-    jumlah: number;
-    harga: number;
-    topping_ids: string[] | null;
-    catatan: string | null;
-    created_at: string;
-}
 
 export async function GET(request: Request) {
     try {
@@ -220,8 +205,8 @@ export async function POST(request: Request) {
             // Buat keranjang baru
             const newKeranjang = await query<Keranjang>(
                 `INSERT INTO keranjang (meja_id, pelanggan_id) 
-                 VALUES ($1, NULL) 
-                 RETURNING id`,
+                    VALUES ($1, NULL) 
+                    RETURNING id`,
                 [parseInt(meja_id)]
             );
 
@@ -240,7 +225,7 @@ export async function POST(request: Request) {
         
         const keranjangItem = await query<KeranjangItem>(
             `INSERT INTO keranjang_item (keranjang_id, item_id, jumlah, harga, topping_ids, catatan) 
-             VALUES ($1, $2, $3, $4, $5, $6) 
+                VALUES ($1, $2, $3, $4, $5, $6) 
              RETURNING *`,
             [
                 keranjangId,
