@@ -64,7 +64,7 @@ export default function Header() {
     const router = useRouter();
     
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [showLoginModal, setShowLoginModal] = useState(false);
+    // const [showLoginModal, setShowLoginModal] = useState(false);
     const [itemData, setItemData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [tableInfo, setTableInfo] = useState({
@@ -95,14 +95,6 @@ export default function Header() {
             return;
             }
     
-            // 🔓 decode
-            // const dateNow = new Date().getTime();
-            // const step3 = atob(encodedIda).replace(dateNow.toString(), '');
-            // const step2 = atob(step3).replace('_restaurant', '');
-            // const step1 = atob(step2).replace('_foodie', '');
-            // const decodedTableId = Number(atob(step1));
-
-
             const decodedFinal = atob(encodedIda);
 
             // pisahkan payload & tanggal
@@ -141,7 +133,7 @@ export default function Header() {
             setLoading(false);
             return; 
             }
-    
+
             const response = await fetch(`/api/tables/${decodedTableId}`);
             const result = await response.json();
     
@@ -254,10 +246,10 @@ export default function Header() {
                                 </button>
                             ) : (
                                 <button 
-                                    onClick={() => setShowLoginModal(true)}
+                                    onClick={() => router.push('/')}
                                     className="px-3 py-1.5 sm:px-4 sm:py-2 bg-green-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-green-600 transition-colors shadow-sm"
                                 >
-                                    Login
+                                    Ganti Meja
                                 </button>
                             )}
                         </div>
@@ -266,9 +258,9 @@ export default function Header() {
             </header>
             
             {/* Login Modal */}
-            {showLoginModal && (
+            {/* {showLoginModal && (
                 <LoginModal onClose={() => setShowLoginModal(false)} />
-            )}
+            )} */}
         </>
     );
 }

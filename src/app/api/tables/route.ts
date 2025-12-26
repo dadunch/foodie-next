@@ -1,10 +1,10 @@
 import { query } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import type { Table } from '@/types/database';
+import type { Meja } from '@/types/database';
 
 export async function GET() {
     try {
-        const tables = await query<Table>('SELECT * FROM meja ORDER BY nama_meja');
+        const tables = await query<Meja>('SELECT * FROM meja ORDER BY nama_meja');
         
         return NextResponse.json({
         success: true,

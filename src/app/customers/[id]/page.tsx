@@ -35,10 +35,10 @@ export default function ItemDetail() {
 
     useEffect(() => {
         // Ambil meja_id dari sessionStorage
-        const mejaId = sessionStorage.getItem('meja_id');
+        const meja_id = sessionStorage.getItem('meja_id');
         const mejaName = sessionStorage.getItem('table_name') || 'Table 21';
         
-        if (!mejaId) {
+        if (!meja_id) {
             Swal.fire({
                 title: 'Error!',
                 text: 'Meja belum dipilih. Silakan pilih meja terlebih dahulu.',
@@ -51,7 +51,7 @@ export default function ItemDetail() {
             return;
         }
 
-        setTableId(mejaId);
+        setTableId(meja_id);
         setTableName(mejaName);
 
         const fetchData = async () => {

@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import type { Table } from '@/types/database';
+import type { MenuItem } from '@/types/database';
 
 export async function GET(
     request: Request,
@@ -9,7 +9,7 @@ export async function GET(
     const { id } = await params;
 
     try {        
-        const items = await query<Table>(
+        const items = await query<MenuItem>(
             `SELECT 
                 item.id AS id,
                 item.nama_item,

@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import type { Table } from '@/types/database';
+import type { Meja } from '@/types/database';
 
 export async function GET(
     request: Request,
@@ -9,9 +9,9 @@ export async function GET(
     const { id } = await params;
 
     try {        
-        const items = await query<Table>(
+        const items = await query<Meja>(
             `SELECT 
-                *
+                foodcourt.*, meja.*
             FROM meja
             join foodcourt on meja.foodcourt_id = foodcourt.id
             WHERE meja.id = $1`,
