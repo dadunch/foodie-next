@@ -87,97 +87,173 @@ export default function Header() {
 
     // Fetch table data
     useEffect(() => {
-        const fetchItemData = async () => {
-        try {
-            const encodedIda = searchParams.get('table');
-            if (!encodedIda) {
-            router.push('/');
-            return;
+        const validateAndSetTableData = async () => {
+            try {
+                const encodedId = searchParams.get('table');
+                if (!encodedId) {
+                    router.push('/');
+                    return;
+                }
+    
+                // Decode table ID
+                const decodedFinal = atob(encodedId);
+                const [encodedPart, datePart] = decodedFinal.split('|');
+                
+                // Validasi tanggal
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+                    throw new Error('Tanggal tidak valid');
+                }
+    
+                const step2 = atob(encodedPart).replace('_restaurant', '');
+                const step1 = atob(step2).replace('_foodie', '');
+                const decodedTableId = Number(atob(step1));
+    
+                if (!decodedTableId) {
+                    router.push('/');
+                    return;
+                }
+    
+                // Cek session storage (harusnya sudah ada dari handleTableClick)
+                const cacheKey = `table_${decodedTableId}`;
+                const cachedData = sessionStorage.getItem(cacheKey);
+    
+                if (cachedData) {
+                    const data = JSON.parse(cachedData);
+                    setItemData(data);
+                    setTableInfo({
+                        nama_meja: data.nama_meja,
+                        nama_foodcourt: data.nama_foodcourt,
+                        alamat: data.alamat,
+                        id: data.id,
+                    });
+                    setLoading(false);
+                    return;
+                }
+    
+                // Fallback: fetch jika session storage kosong (refresh page, dll)
+                const response = await fetch(`/api/tables/${decodedTableId}`);
+                const result = await response.json();
+    
+                if (result.success) {
+                    const data = result.data;
+                    setItemData(data);
+                    setTableInfo({
+                        nama_meja: data.nama_meja,
+                        nama_foodcourt: data.nama_foodcourt,
+                        alamat: data.alamat,
+                        id: data.id,
+                    });
+    
+                    // Save to session storage
+                    sessionStorage.setItem(cacheKey, JSON.stringify(data));
+                    sessionStorage.setItem('foodcourt_id', data.foodcourt_id.toString());
+                    sessionStorage.setItem('meja_id', data.id.toString());
+                    sessionStorage.setItem('table_name', data.nama_meja);
+                    sessionStorage.setItem('table_url', encodedId);
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Meja tidak ditemukan',
+                        icon: 'error',
+                        confirmButtonColor: '#50C878',
+                    }).then(() => router.push('/'));
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Gagal mengambil data meja',
+                    icon: 'error',
+                    confirmButtonColor: '#50C878',
+                }).then(() => router.push('/'));
+            } finally {
+                setLoading(false);
             }
-    
-            const decodedFinal = atob(encodedIda);
-
-            // pisahkan payload & tanggal
-            const [encodedPart, datePart] = decodedFinal.split('|');
-
-            // validasi tanggal (opsional)
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-                throw new Error('Tanggal tidak valid');
-            }
-
-            const step2 = atob(encodedPart).replace('_restaurant', '');
-            const step1 = atob(step2).replace('_foodie', '');
-            const decodedTableId = Number(atob(step1));
-    
-            if (!decodedTableId) {
-            router.push('/');
-            return;
-            }
-    
-            // 🔑 cache key
-            const cacheKey = `table_${decodedTableId}`;
-    
-            // 🟢 CEK CACHE
-            const cachedData = sessionStorage.getItem(cacheKey);
-            if (cachedData) {
-            const data = JSON.parse(cachedData);
-    
-            setItemData(data);
-            setTableInfo({
-                nama_meja: data.nama_meja,
-                nama_foodcourt: data.nama_foodcourt,
-                alamat: data.alamat,
-                id: data.id,
-            });
-    
-            setLoading(false);
-            return; 
-            }
-
-            const response = await fetch(`/api/tables/${decodedTableId}`);
-            const result = await response.json();
-    
-            if (result.success) {
-            setItemData(result.data);
-            setTableInfo({
-                nama_meja: result.data.nama_meja,
-                nama_foodcourt: result.data.nama_foodcourt,
-                alamat: result.data.alamat,
-                id: result.data.id,
-            });
-    
-            // 💾 SIMPAN KE CACHE
-            sessionStorage.setItem(
-                cacheKey,
-                JSON.stringify(result.data)
-            );
-            sessionStorage.setItem('foodcourt_id', result.data.foodcourt_id);
-            sessionStorage.setItem('meja_id', result.data.id);
-            sessionStorage.setItem('table_name', result.data.nama_meja);
-            sessionStorage.setItem('table_url', encodedIda);
-            
-            } else {
-            Swal.fire({
-                title: 'Error!',
-                text: 'Meja tidak ditemukan',
-                icon: 'error',
-                confirmButtonColor: '#50C878',
-            }).then(() => router.push('/'));
-            }
-        } catch (error) {
-            Swal.fire({
-            title: 'Error!',
-            text: 'Gagal mengambil data meja',
-            icon: 'error',
-            confirmButtonColor: '#50C878',
-            }).then(() => router.push('/'));
-        } finally {
-            setLoading(false);
-        }
         };
     
-        fetchItemData();
+        validateAndSetTableData();
     }, [searchParams, router]);
+
+
+    // useEffect(() => {
+    //     const fetchItemData = async () => {
+    //     try {
+    //         const encodedIda = searchParams.get('table');
+    //         if (!encodedIda) {
+    //         router.push('/');
+    //         return;
+    //         }
+    //         const decodedFinal = atob(encodedIda);
+    //         // pisahkan payload & tanggal
+    //         const [encodedPart, datePart] = decodedFinal.split('|');
+    //         // validasi tanggal (opsional)
+    //         if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    //             throw new Error('Tanggal tidak valid');
+    //         }
+    //         const step2 = atob(encodedPart).replace('_restaurant', '');
+    //         const step1 = atob(step2).replace('_foodie', '');
+    //         const decodedTableId = Number(atob(step1));
+    //         if (!decodedTableId) {
+    //         router.push('/');
+    //         return;
+    //         }
+            
+    //         const cacheKey = `table_${decodedTableId}`;
+    //         const cachedData = sessionStorage.getItem(cacheKey);
+    //         if (cachedData) {
+    //             const data = JSON.parse(cachedData);
+    //             setItemData(data);
+    //             setTableInfo({
+    //                 nama_meja: data.nama_meja,
+    //                 nama_foodcourt: data.nama_foodcourt,
+    //                 alamat: data.alamat,
+    //                 id: data.id,
+    //             });
+        
+    //             setLoading(false);
+    //             return; 
+    //         }
+    //         const response = await fetch(`/api/tables/${decodedTableId}`);
+    //         const result = await response.json();
+    
+    //         if (result.success) {
+    //             setItemData(result.data);
+    //             setTableInfo({
+    //                 nama_meja: result.data.nama_meja,
+    //                 nama_foodcourt: result.data.nama_foodcourt,
+    //                 alamat: result.data.alamat,
+    //                 id: result.data.id,
+    //             });
+
+    //             sessionStorage.setItem(
+    //                 cacheKey,
+    //                 JSON.stringify(result.data)
+    //             );
+    //             sessionStorage.setItem('foodcourt_id', result.data.foodcourt_id);
+    //             sessionStorage.setItem('meja_id', result.data.id);
+    //             sessionStorage.setItem('table_name', result.data.nama_meja);
+    //             sessionStorage.setItem('table_url', encodedIda);   
+    //         } else {
+    //             Swal.fire({
+    //                 title: 'Error!',
+    //                 text: 'Meja tidak ditemukan',
+    //                 icon: 'error',
+    //                 confirmButtonColor: '#50C878',
+    //             }).then(() => router.push('/'));
+    //         }
+    //     } catch (error) {
+    //         Swal.fire({
+    //         title: 'Error!',
+    //         text: 'Gagal mengambil data meja',
+    //         icon: 'error',
+    //         confirmButtonColor: '#50C878',
+    //         }).then(() => router.push('/'));
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    //     };
+    
+    //     fetchItemData();
+    // }, [searchParams, router]);
 
     const handleLogout = () => {
         if (window.confirm('Are you sure you want to log out?')) {

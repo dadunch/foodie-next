@@ -45,15 +45,41 @@ export default function FoodieQRScanner() {
         });
     };
 
-    const handleTableClick = (tableId: number) => {
-        clearAllTableCache();
-        const today = new Date().toISOString().slice(0, 10);
-        const step1 = btoa(tableId.toString());
-        const step2 = btoa(step1 + '_foodie');
-        const step3 = btoa(step2 + '_restaurant');
-        const encodedId = btoa(`${step3}|${today}`);
+    // const handleTableClick = (tableId: number) => {
+    //     clearAllTableCache();
+    //     const today = new Date().toISOString().slice(0, 10);
+    //     const step1 = btoa(tableId.toString());
+    //     const step2 = btoa(step1 + '_foodie');
+    //     const step3 = btoa(step2 + '_restaurant');
+    //     const encodedId = btoa(`${step3}|${today}`);
         
-        window.location.href = `/customers?table=${encodedId}`;
+    //     window.location.href = `/customers?table=${encodedId}`;
+    // };
+    const handleTableClick = (table: any) => {
+        try {
+            clearAllTableCache();
+            
+            // Encode table ID
+            const today = new Date().toISOString().slice(0, 10);
+            const step1 = btoa(table.id.toString());
+            const step2 = btoa(step1 + '_foodie');
+            const step3 = btoa(step2 + '_restaurant');
+            const encodedId = btoa(`${step3}|${today}`);
+            
+            // Set semua session storage sekaligus
+            const cacheKey = `table_${table.id}`;
+            sessionStorage.setItem(cacheKey, JSON.stringify(table));
+            sessionStorage.setItem('foodcourt_id', table.foodcourt_id.toString());
+            sessionStorage.setItem('meja_id', table.id.toString());
+            sessionStorage.setItem('table_name', table.nama_meja);
+            sessionStorage.setItem('table_url', encodedId);
+            
+            // Navigate
+            window.location.href = `/customers?table=${encodedId}`;
+        } catch (error) {
+            console.error('Error handling table click:', error);
+            alert('Terjadi kesalahan, silakan coba lagi');
+        }
     };
 
     const startScanning = () => {
@@ -166,7 +192,7 @@ export default function FoodieQRScanner() {
                         {tables.map((table) => (
                             <button
                                 key={table.id}
-                                onClick={() => handleTableClick(table.id)}
+                                onClick={() => handleTableClick(table)} // Pass seluruh object
                                 className="bg-gradient-to-br from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-2 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all text-sm"
                             >
                                 {table.nama_meja}

@@ -4,7 +4,7 @@ import type { Meja } from '@/types/database';
 
 export async function GET() {
     try {
-        const tables = await query<Meja>('SELECT * FROM meja ORDER BY nama_meja');
+        const tables = await query<Meja>('SELECT meja.*, foodcourt.nama_foodcourt FROM meja JOIN foodcourt ON foodcourt.id = meja.foodcourt_id ORDER BY nama_meja');
         
         return NextResponse.json({
         success: true,
