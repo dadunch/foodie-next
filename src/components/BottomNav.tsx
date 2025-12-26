@@ -53,7 +53,7 @@ export default function BottomNav() {
             </button>
 
             <button 
-                onClick={() => router.push('/history')} 
+                onClick={() => router.push('/customers/history?table=' + sessionStorage.getItem('table_url'))} 
                 className={`flex flex-col items-center transition-colors p-2 ${
                     isActive('/history') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}
