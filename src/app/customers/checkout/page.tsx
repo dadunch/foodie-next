@@ -11,17 +11,21 @@ export default function CheckoutPage() {
     const table = searchParams.get('table');
     const mejaName = sessionStorage.getItem('table_name') || 'Table 21';
 
-    // const [checkoutData, setCheckoutData] = useState<any>(null);
     const [paymentMethod, setPaymentMethod] = useState('CASH');
     const [loading, setLoading] = useState(true);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showProcessingModal, setShowProcessingModal] = useState(false);
+    const [showCartModal, setShowCartModal] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [qrCodeData, setQRCodeData] = useState<string>('');
 
     const [checkoutData, setCartItems] = useState<{ 
         id: number; 
         harga: number; 
         nama_item: string; 
         jumlah: number; 
+        totalHarga: number;
+        foto_item?: string;
         toppings?: { id: number; nama_toping: string; harga: number }[]; 
         catatan?: string; 
         [key: string]: any 
@@ -29,8 +33,6 @@ export default function CheckoutPage() {
 
     const [tableInfo, setTableInfo] = useState(null);
 
-
-    // Fetch checkout data
     useEffect(() => {
         if (table) {
             fetchCartData();
@@ -61,8 +63,6 @@ export default function CheckoutPage() {
         }
     };
 
-
-    // Format currency
     const formatRupiah = (amount: number) => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -71,12 +71,10 @@ export default function CheckoutPage() {
         }).format(amount);
     };
 
-    // Calculate totals
-    const subtotal = checkoutData?.nominal_bayar || 0;
+    const subtotal = checkoutData.reduce((sum, item) => sum + Number(item.totalHarga || 0), 0);
     const serviceCharge = subtotal * 0.02;
     const grandTotal = subtotal + serviceCharge;
 
-    // Get payment method ID
     const getPaymentMethodId = (method: string) => {
         const methodMap: { [key: string]: number } = {
             'CASH': 1,
@@ -85,23 +83,24 @@ export default function CheckoutPage() {
         return methodMap[method] || 1;
     };
 
-    // Handle payment
     const handlePayment = async () => {
         setShowConfirmModal(false);
         setShowProcessingModal(true);
 
         try {
+            // Ambil device_id dari localStorage
+            const deviceId = localStorage.getItem('device_id');
+
             const response = await fetch('/api/payment', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    order_id: checkoutData?.id,
-                    keranjang_id: checkoutData?.keranjang_id || table,
+                    table_id: table,
                     nominal_bayar: grandTotal,
                     metode_pembayaran_id: getPaymentMethodId(paymentMethod),
-                    table_id: table
+                    device_id: deviceId
                 })
             });
 
@@ -110,15 +109,22 @@ export default function CheckoutPage() {
             setShowProcessingModal(false);
 
             if (data.success) {
-                await Swal.fire({
-                    title: 'Pembayaran Berhasil!',
-                    text: `Pembayaran telah diproses dengan ID: ${data.payment_id}`,
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#10b981'
-                });
-                
-                router.push(`/history?table=${table}`);
+                // Jika QRIS, tampilkan QR Code modal
+                if (paymentMethod === 'Qris' && data.qr_code_base64) {
+                    setQRCodeData(data.qr_code_base64);
+                    setShowQRModal(true);
+                } else {
+                    // Jika CASH, tampilkan pesan
+                    await Swal.fire({
+                        title: 'Pembayaran Berhasil Dibuat!',
+                        text: data.message || 'Silakan membayar di kasir',
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#10b981'
+                    });
+                    
+                    router.push(`/customers/history?table=${table}`);
+                }
             } else {
                 throw new Error(data.message);
             }
@@ -172,7 +178,7 @@ export default function CheckoutPage() {
                 {/* Payment Methods */}
                 <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <h2 className="text-xl font-semibold mb-4">Metode Pembayaran</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 content-center">
                         {/* CASH */}
                         <label 
                             className={`relative flex flex-col items-center p-6 border-2 rounded-xl cursor-pointer transition-all ${
@@ -189,7 +195,7 @@ export default function CheckoutPage() {
                                 onChange={(e) => setPaymentMethod(e.target.value)}
                                 className="sr-only"
                             />
-                            <img src="/assets/logo/CASH.png" alt="Cash" className="w-16 h-16 mb-3 object-contain" />
+                            <img src="/logo/cash.svg" alt="Cash" className="w-16 h-16 mb-3 object-contain" />
                             <span className="font-semibold text-gray-800">Cash</span>
                             {paymentMethod === 'CASH' && (
                                 <div className="absolute top-3 right-3 text-green-500">
@@ -199,7 +205,6 @@ export default function CheckoutPage() {
                                 </div>
                             )}
                         </label>
-
 
                         {/* Qris */}
                         <label 
@@ -217,7 +222,7 @@ export default function CheckoutPage() {
                                 onChange={(e) => setPaymentMethod(e.target.value)}
                                 className="sr-only"
                             />
-                            <img src="/assets/logo/Qris.png" alt="Qris" className="w-16 h-16 mb-3 object-contain" />
+                            <img src="/logo/qris.webp" alt="Qris" className="w-16 h-16 mb-3 object-contain" />
                             <span className="font-semibold text-gray-800">Qris</span>
                             {paymentMethod === 'Qris' && (
                                 <div className="absolute top-3 right-3 text-green-500">
@@ -235,9 +240,9 @@ export default function CheckoutPage() {
                     <h2 className="text-xl font-semibold mb-4">Ringkasan Pesanan</h2>
                     <div className="space-y-3 mb-4">
                         <div className="flex justify-between items-center text-gray-700">
-                            <span>{checkoutData?.item_count || 0} produk di keranjang</span>
+                            <span>{checkoutData?.length || 0} produk di keranjang</span>
                             <button
-                                onClick={() => router.push(`/cart?table=${table}`)}
+                                onClick={() => setShowCartModal(true)}
                                 className="text-green-500 hover:text-green-600 font-medium text-sm"
                             >
                                 Lihat Keranjang
@@ -271,9 +276,144 @@ export default function CheckoutPage() {
                 </button>
             </div>
 
+            {/* QR Code Modal */}
+            {showQRModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl text-center">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Scan QR Code</h2>
+                        <p className="text-gray-600 mb-6">Scan kode QR di bawah ini untuk melakukan pembayaran</p>
+                        
+                        <div className="bg-gray-50 p-6 rounded-xl mb-6 inline-block">
+                            <img src={qrCodeData} alt="QR Code" className="w-64 h-64 mx-auto" />
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => {
+                                    setShowQRModal(false);
+                                    router.push(`/customers/history?table=${table}`);
+                                }}
+                                className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                            >
+                                Selesai
+                            </button>
+                            <button
+                                onClick={() => setShowQRModal(false)}
+                                className="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                            >
+                                Batal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Cart Modal */}
+            {showCartModal && (
+                <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
+                        {/* Modal Header */}
+                        <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white">
+                            <h2 className="text-2xl font-bold text-gray-800">Detail Keranjang</h2>
+                            <button
+                                onClick={() => setShowCartModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="overflow-y-auto flex-1 p-6">
+                            <div className="space-y-4">
+                                {checkoutData.map((item) => (
+                                    <div key={item.id} className="bg-gray-50 rounded-lg p-4 flex gap-4">
+                                        {/* Item Image */}
+                                        <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                            {item.foto_item ? (
+                                                <img 
+                                                    src={`/img/${item.foto_item}`} 
+                                                    alt={item.nama_item}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Item Details */}
+                                        <div className="flex-1">
+                                            <h3 className="font-semibold text-gray-800 mb-1">{item.nama_item}</h3>
+                                            <p className="text-sm text-gray-600 mb-2">{formatRupiah(Number(item.harga))}</p>
+                                            
+                                            {/* Toppings */}
+                                            {item.toppings && item.toppings.length > 0 && (
+                                                <div className="mb-2">
+                                                    <p className="text-xs text-gray-500 mb-1">Toppings:</p>
+                                                    {item.toppings.map((topping: any) => (
+                                                        <span key={topping.id} className="inline-block text-xs bg-green-100 text-green-700 px-2 py-1 rounded mr-1 mb-1">
+                                                            {topping.nama_toping} (+{formatRupiah(Number(topping.harga))})
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Notes */}
+                                            {item.catatan && (
+                                                <p className="text-xs text-gray-500 italic mb-2">
+                                                    Catatan: {item.catatan}
+                                                </p>
+                                            )}
+
+                                            {/* Quantity and Total */}
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm text-gray-600">Jumlah: {item.jumlah}x</span>
+                                                <span className="font-semibold text-green-600">{formatRupiah(Number(item.totalHarga))}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Summary in Modal */}
+                            <div className="mt-6 pt-4 border-t space-y-2">
+                                <div className="flex justify-between text-gray-700">
+                                    <span>Subtotal</span>
+                                    <span>{formatRupiah(subtotal)}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-700">
+                                    <span>Biaya Layanan (2%)</span>
+                                    <span>{formatRupiah(serviceCharge)}</span>
+                                </div>
+                                <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                                    <span>Total</span>
+                                    <span className="text-green-500">{formatRupiah(grandTotal)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-6 border-t bg-gray-50">
+                            <button
+                                onClick={() => setShowCartModal(false)}
+                                className="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Confirmation Modal */}
             {showConfirmModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 backdrop-blur-md bg-white/30 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-2xl font-bold text-gray-800">Konfirmasi Pembayaran</h2>
@@ -296,7 +436,7 @@ export default function CheckoutPage() {
                             </div>
                             <div className="flex justify-between">
                                 <strong className="text-gray-700">Items:</strong>
-                                <span className="text-gray-900">{checkoutData?.item_count || 0} items</span>
+                                <span className="text-gray-900">{checkoutData?.length || 0} items</span>
                             </div>
                             <div className="flex justify-between">
                                 <strong className="text-gray-700">Total:</strong>

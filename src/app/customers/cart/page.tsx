@@ -134,7 +134,7 @@ export default function CartPage() {
         }
 
         try {
-            console.log('deviceId:', localStorage.getItem('device_id'));
+            // console.log('deviceId:', localStorage.getItem('device_id'));
             const response = await fetch('/api/order', {
                 method: 'POST',
                 headers: {

@@ -68,7 +68,7 @@ export async function GET(request: Request) {
         JOIN keranjang_item ON keranjang_item.keranjang_id = keranjang.id
         JOIN item ON item.id = keranjang_item.item_id
         WHERE keranjang.meja_id = $1 
-            AND keranjang.created_at >= NOW() - INTERVAL '200 minutes'
+            AND keranjang.created_at >= NOW() - INTERVAL '20 minutes'
         ORDER BY keranjang_item.id ASC
         `;
 

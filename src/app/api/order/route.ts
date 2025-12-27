@@ -40,7 +40,7 @@ export async function GET(request: Request) {
         twentyMinutesAgo.setMinutes(twentyMinutesAgo.getMinutes() - 20);
 
         const cartItems = await query<Order>(
-            `SELECT o.*, k.*
+            `SELECT  k.*, o.*
             FROM "order" o
             JOIN keranjang k ON o.keranjang_id = k.id
             WHERE k.meja_id = $1 AND k.created_at >= $2

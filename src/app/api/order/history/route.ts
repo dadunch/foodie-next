@@ -28,34 +28,17 @@ interface OrderHistoryItem {
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const encodedIda = searchParams.get('table');
+        const encodedIda = searchParams.get('device_id');
         
         if (!encodedIda) {
             return NextResponse.json({
                 success: false,
-                message: 'Table ID is required'
+                message: 'Device ID is required'
             }, { status: 400 });
         }
 
         // Decode table ID
         try {
-            const decodedFinal = atob(encodedIda);
-            const [encodedPart, datePart] = decodedFinal.split('|');
-
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-                throw new Error('Tanggal tidak valid');
-            }
-
-            const step2 = atob(encodedPart).replace('_restaurant', '');
-            const step1 = atob(step2).replace('_foodie', '');
-            const tableId = Number(atob(step1));
-
-            if (!tableId || isNaN(tableId)) {
-                return NextResponse.json({
-                    success: false,
-                    message: 'Invalid Table ID'
-                }, { status: 400 });
-            }
 
             // Query untuk mendapatkan order history
             const ordersQuery = `
@@ -69,16 +52,19 @@ export async function GET(request: Request) {
                     o.catatan,
                     o.device_id,
                     m.nama_meja,
-                    k.id as keranjang_id
+                    k.id as keranjang_id,
+                    fc.nama_foodcourt,
+                    fc.id as foodcourt_id
                 FROM "order" o
                 JOIN keranjang k ON o.keranjang_id = k.id
                 JOIN meja m ON k.meja_id = m.id
-                WHERE k.meja_id = $1
+                JOIN foodcourt fc ON fc.id = m.foodcourt_id
+                WHERE o.device_id = $1
                 ORDER BY o.time DESC
                 LIMIT 50
             `;
 
-            const orders = await query(ordersQuery, [tableId]);
+            const orders = await query(ordersQuery, [encodedIda]);
 
             // Jika tidak ada order, return empty array
             if (orders.length === 0) {
@@ -149,11 +135,13 @@ export async function GET(request: Request) {
                         );
 
                         // Map status dari database ke frontend format
-                        let displayStatus: 'completed' | 'processing' | 'cancelled' = 'processing';
+                        let displayStatus: 'completed' | 'processing' | 'cancelled' | 'notpayyed' = 'processing';
                         if (order.status === 'Sudah Bayar' || order.status === 'Selesai') {
                             displayStatus = 'completed';
                         } else if (order.status === 'Batal' || order.status === 'Dibatalkan') {
                             displayStatus = 'cancelled';
+                        } else if (order.status === 'Belum Bayar') {
+                            displayStatus = 'notpayyed';
                         }
 
                         return {
@@ -166,6 +154,8 @@ export async function GET(request: Request) {
                             catatan: order.catatan,
                             nama_meja: order.nama_meja,
                             device_id: order.device_id,
+                            nama_foodcourt: order.nama_foodcourt,
+                            foodcourt_id: order.foodcourt_id,
                             items: itemsWithToppings
                         };
                     } catch (orderError) {

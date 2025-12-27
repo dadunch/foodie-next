@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
 import { QrCode, Camera, User, Store, X } from 'lucide-react';
@@ -12,14 +12,20 @@ export default function FoodieQRScanner() {
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
 
-    let deviceId = localStorage.getItem('device_id');
-    if (!deviceId) {
-    deviceId = uuidv4();
-    localStorage.setItem('device_id', deviceId);
-    }
+    // let deviceId = localStorage.getItem('device_id');
+    // if (!deviceId) {
+    // deviceId = uuidv4();
+    // localStorage.setItem('device_id', deviceId);
+    // }
 
     // remove all cache
     useEffect(() => {
+        let deviceId = localStorage.getItem('device_id');
+        if (!deviceId) {
+        deviceId = uuidv4();
+        localStorage.setItem('device_id', deviceId);
+        }
+        
         const mockTables = Array;
         const fetchMenuItems = async () => {
             try {

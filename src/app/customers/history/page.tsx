@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Calendar, Clock, ShoppingBag, ChevronRight, Filter, Receipt, X } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
+import { exit } from 'process';
 
 interface OrderItem {
     id: number;
@@ -28,6 +29,8 @@ interface Order {
     items: OrderItem[];
     nama_meja: string;
     catatan?: string | null;
+    nama_foodcourt: string;
+    foodcourt_id: number;
 }
 
 export default function HistoryPage() {
@@ -38,7 +41,7 @@ export default function HistoryPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'processing' | 'cancelled'>('all');
+    const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'processing' | 'cancelled' | 'notpayyed'>('all');
     const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
 
     useEffect(() => {
@@ -55,7 +58,7 @@ export default function HistoryPage() {
             setLoading(true);
             setError(null);
             
-            const response = await fetch(`/api/order/history?table=${tableParam}`);
+            const response = await fetch(`/api/order/history?device_id=${localStorage.getItem('device_id') || ''}`);
             
             // Check if response is ok
             if (!response.ok) {
@@ -102,12 +105,14 @@ export default function HistoryPage() {
 
     const getStatusBadge = (status: Order['status']) => {
         const styles = {
+            notPayyed: 'bg-gray-100 text-gray-700 border-gray-200',
             completed: 'bg-green-100 text-green-700 border-green-200',
             processing: 'bg-blue-100 text-blue-700 border-blue-200',
             cancelled: 'bg-red-100 text-red-700 border-red-200',
         };
 
         const labels = {
+            notpayyed: 'Belum Bayar',
             completed: 'Selesai',
             processing: 'Diproses',
             cancelled: 'Dibatalkan',
@@ -130,6 +135,11 @@ export default function HistoryPage() {
 
     const handleReorder = async (order: Order) => {
         // Implementasi reorder - tambahkan semua items ke cart
+        console.log(order.foodcourt_id, Number(sessionStorage.getItem('foodcourt_id')));
+        if(Number(order.foodcourt_id) !== Number(sessionStorage.getItem('foodcourt_id'))) {
+            alert('Tidak dapat memesan ulang. Pesanan berasal dari foodcourt yang berbeda.');
+            return;
+        }
         try {
             for (const item of order.items) {
                 const formData = new FormData();
@@ -140,6 +150,7 @@ export default function HistoryPage() {
                 formData.append('notes', '');
                 formData.append('price', `Rp ${item.harga}`);
 
+                // console.log(order);
                 await fetch('/api/cart', {
                     method: 'POST',
                     body: formData
@@ -249,6 +260,16 @@ export default function HistoryPage() {
                         >
                             Dibatalkan
                         </button>
+                        <button
+                            onClick={() => setFilterStatus('notpayyed')}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                                filterStatus === 'notpayyed'
+                                    ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        >
+                            Belum bayar
+                        </button>
                     </div>
                 </div>
             </section>
@@ -289,7 +310,8 @@ export default function HistoryPage() {
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <h3 className="font-bold text-gray-800">
-                                                    {order.order_number}
+                                                    {order.order_number}&nbsp;-&nbsp;
+                                                    {order.nama_foodcourt}
                                                 </h3>
                                                 {getStatusBadge(order.status)}
                                             </div>
