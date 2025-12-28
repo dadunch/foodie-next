@@ -92,7 +92,7 @@ export async function POST(request: Request) {
         // Untuk CASH, status tetap "Belum Dibayar" (tidak perlu update)
 
         // 4. Insert ke table pembayaran
-        const now = new Date();
+        const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta' }));
         const tanggalBayar = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
         const waktuBayar = now.toTimeString().split(' ')[0]; // Format: HH:MM:SS
 

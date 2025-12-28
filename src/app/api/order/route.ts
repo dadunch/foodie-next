@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         const notes = body.catatan as string || '';
         const price = body.nominalBayar; // Use nominalBayar from the request
         const status = "Belum Bayar";
-        const time = new Date().toISOString();
+        const time = new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString();
         // const device_id = body.device_id as string || '';
         const device_id =
             typeof body.device_id === 'string' &&
