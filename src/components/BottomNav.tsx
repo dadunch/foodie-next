@@ -1,10 +1,25 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-export default function BottomNav() {
+// 1. Tambahkan Interface Props
+interface BottomNavProps {
+    cartCount?: number; // Opsional, default 0
+}
+
+export default function BottomNav({ cartCount = 0 }: BottomNavProps) {
     const router = useRouter();
     const pathname = usePathname();
+    
+    // 2. Gunakan State untuk table_url agar aman dari Error Hydration/Server Side
+    const [tableUrl, setTableUrl] = useState('');
+
+    useEffect(() => {
+        // Ambil data hanya saat di client-side (browser)
+        const storedTable = sessionStorage.getItem('table_url') || '';
+        setTableUrl(storedTable);
+    }, []);
 
     const isActive = (path: string) => {
         return pathname === path;
@@ -12,8 +27,9 @@ export default function BottomNav() {
 
     return (
         <div className="fixed bottom-0 left-0 right-0 bg-white flex justify-around py-3 shadow-lg z-50 border-t border-gray-200">
+            {/* HOME */}
             <button 
-                onClick={() => router.push('/customers?table=' + sessionStorage.getItem('table_url'))} 
+                onClick={() => router.push('/customers?table=' + tableUrl)} 
                 className={`flex flex-col items-center transition-colors p-2 ${
                     isActive('/customers') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}
@@ -24,10 +40,11 @@ export default function BottomNav() {
                 <span className="text-xs">Home</span>
             </button>
 
+            {/* SEARCH */}
             <button 
-                onClick={() => router.push('/customers?focus=search&table=' + sessionStorage.getItem('table_url'))}
+                onClick={() => router.push('/customers?focus=search&table=' + tableUrl)}
                 className={`flex flex-col items-center transition-colors p-2 ${
-                    'text-gray-500 hover:text-green-500'
+                    isActive('/customers?focus=search') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}
             >
                 <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">
@@ -36,8 +53,9 @@ export default function BottomNav() {
                 <span className="text-xs">Search</span>
             </button>
 
+            {/* CART (DENGAN BADGE) */}
             <button 
-                onClick={() => router.push('/customers/cart?table=' + sessionStorage.getItem('table_url'))} 
+                onClick={() => router.push('/customers/cart?table=' + tableUrl)} 
                 className={`flex flex-col items-center transition-colors p-2 ${
                     isActive('/customers/cart') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}
@@ -46,14 +64,20 @@ export default function BottomNav() {
                     <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
                     </svg>
-                    {/* Optional: Badge untuk jumlah item di cart */}
-                    {/* <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span> */}
+                    
+                    {/* 3. Logic Badge Cart */}
+                    {cartCount > 0 && (
+                        <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center border-2 border-white animate-in zoom-in">
+                            {cartCount}
+                        </span>
+                    )}
                 </div>
                 <span className="text-xs">Cart</span>
             </button>
 
+            {/* HISTORY */}
             <button 
-                onClick={() => router.push('/customers/history?table=' + sessionStorage.getItem('table_url'))} 
+                onClick={() => router.push('/customers/history?table=' + tableUrl)} 
                 className={`flex flex-col items-center transition-colors p-2 ${
                     isActive('/customers/history') ? 'text-green-500' : 'text-gray-500 hover:text-green-500'
                 }`}

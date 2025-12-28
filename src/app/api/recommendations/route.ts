@@ -1,27 +1,31 @@
 import { NextResponse } from 'next/server';
-import { Pool } from 'pg'; 
-// CATATAN: Ganti import Pool ini dengan import db dari 'src/lib/db.ts' Anda 
-// jika Anda sudah punya koneksi database terpusat.
-// Contoh: import { db } from '@/lib/db';
+import { Pool } from 'pg';
 
-// Setup koneksi sementara (jika belum ada di lib/db.ts)
+// Setup koneksi database
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, 
 });
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const triggerItemId = searchParams.get('itemId');
-
-  if (!triggerItemId) {
-    return NextResponse.json({ error: 'Item ID required' }, { status: 400 });
-  }
-
+export async function POST(request: Request) {
   try {
-    // Query mencari rekomendasi terbaik
-    // Logic: Cari di tabel AI, tapi PASTIKAN item itu belum ada di keranjang user (opsional, perlu logic tambahan)
+    // 1. Terima data item_ids (Array ID barang di keranjang) dari Frontend
+    const body = await request.json();
+    const { item_ids } = body;
+
+    if (!item_ids || !Array.isArray(item_ids) || item_ids.length === 0) {
+      return NextResponse.json({ success: true, data: [] });
+    }
+
+    // 2. Query SQL
+    // Penjelasan Logic:
+    // - Cari di tabel ai_recommendations dimana trigger_item_id ADA di dalam keranjang user.
+    // - JOIN dengan tabel item untuk mengambil nama/foto/harga.
+    // - WHERE ... NOT = ANY($1) -> Pastikan item rekomendasi BELUM ada di keranjang user.
+    // - ORDER BY confidence -> Urutkan dari yang paling akurat.
+    // - LIMIT 5 -> Batasi 5 rekomendasi saja.
+
     const query = `
-      SELECT 
+      SELECT DISTINCT
         i.id, 
         i.nama_item, 
         i.harga_item, 
@@ -29,22 +33,22 @@ export async function GET(request: Request) {
         ar.confidence
       FROM ai_recommendations ar
       JOIN item i ON ar.recommended_item_id = i.id
-      WHERE ar.trigger_item_id = $1
+      WHERE ar.trigger_item_id = ANY($1) 
+      AND ar.recommended_item_id != ALL($1)
       ORDER BY ar.confidence DESC
-      LIMIT 1
+      LIMIT 5
     `;
 
-    const result = await pool.query(query, [triggerItemId]);
+    // $1 akan digantikan oleh array item_ids
+    const result = await pool.query(query, [item_ids]);
     
-    // Jika tidak ada rekomendasi, kembalikan null
-    if (result.rows.length === 0) {
-      return NextResponse.json({ recommendation: null });
-    }
-
-    return NextResponse.json({ recommendation: result.rows[0] });
+    return NextResponse.json({ 
+      success: true, 
+      data: result.rows 
+    });
     
   } catch (error) {
     console.error('Error fetching recommendation:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
