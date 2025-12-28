@@ -262,7 +262,7 @@ export default function Header() {
     };
     
     const handleHistoryClick = () => {
-        alert('Navigating to Order History...');
+        router.push(`/customers/history?table=${searchParams.get('table')}`);
     };
     return (
         <>
