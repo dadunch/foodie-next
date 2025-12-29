@@ -41,7 +41,7 @@ export default function HistoryPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'processing' | 'cancelled' | 'notpayyed'>('all');
+    const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'processing' | 'cancelled' | 'notpayyed' | 'notprocessed'>('all');
     const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
 
     useEffect(() => {
@@ -106,6 +106,7 @@ export default function HistoryPage() {
     const getStatusBadge = (status: Order['status']) => {
         const styles = {
             notPayyed: 'bg-gray-100 text-gray-700 border-gray-200',
+            notprocessed: 'bg-yellow-100 text-yellow-700 border-yellow-200',
             completed: 'bg-green-100 text-green-700 border-green-200',
             processing: 'bg-blue-100 text-blue-700 border-blue-200',
             cancelled: 'bg-red-100 text-red-700 border-red-200',
@@ -113,6 +114,7 @@ export default function HistoryPage() {
 
         const labels = {
             notpayyed: 'Belum Bayar',
+            notprocessed: 'Belum Diproses',
             completed: 'Selesai',
             processing: 'Diproses',
             cancelled: 'Dibatalkan',
@@ -269,6 +271,16 @@ export default function HistoryPage() {
                             }`}
                         >
                             Belum bayar
+                        </button>
+                        <button
+                            onClick={() => setFilterStatus('notprocessed')}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+                                filterStatus === 'notprocessed'
+                                    ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            }`}
+                        >
+                            Belum diproses
                         </button>
                     </div>
                 </div>

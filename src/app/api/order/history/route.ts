@@ -135,13 +135,15 @@ export async function GET(request: Request) {
                         );
 
                         // Map status dari database ke frontend format
-                        let displayStatus: 'completed' | 'processing' | 'cancelled' | 'notpayyed' = 'processing';
+                        let displayStatus: 'completed' | 'processing' | 'cancelled' | 'notpayyed' | 'notprocessed' = 'processing' ;
                         if (order.status === 'Sudah Bayar' || order.status === 'Selesai') {
                             displayStatus = 'completed';
                         } else if (order.status === 'Batal' || order.status === 'Dibatalkan') {
                             displayStatus = 'cancelled';
                         } else if (order.status === 'Belum Bayar') {
                             displayStatus = 'notpayyed';
+                        } else if (order.status === 'Belum Diproses') {
+                            displayStatus = 'notprocessed';
                         }
 
                         return {

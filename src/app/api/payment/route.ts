@@ -79,11 +79,9 @@ export async function POST(request: Request) {
 
         // 3. Update status order
         if (isQris) {
-            // Update status menjadi "Diproses" untuk QRIS
-            console.log('🔄 Updating order status to "Diproses" for order_id:', order_id);
             await query(
                 `UPDATE "order" SET status = $1 WHERE id = $2`,
-                ['Diproses', order_id]
+                ['Belum Diproses', order_id]
             );
             console.log('✅ Order status updated successfully');
         } else {
