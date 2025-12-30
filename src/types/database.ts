@@ -56,4 +56,5 @@ export interface Order {
     nominal_bayar: number;
     time: string;
     catatan: string | null;
+    device_id: string | null;
 }

@@ -24,6 +24,7 @@ export default function CartPage() {
     const [tableInfo, setTableInfo] = useState(null);
     const [additionalNotes, setAdditionalNotes] = useState('');
     const [loading, setLoading] = useState(true);
+    const [cartAlreadyOrdered, setCartAlreadyOrdered] = useState(false);
 
     // Fetch cart data
     useEffect(() => {
@@ -41,6 +42,11 @@ export default function CartPage() {
             if (data.success) {
                 setCartItems(data.items || []);
                 setTableInfo(data.tableInfo);
+                
+                // Cek status cart jika ada items
+                if (data.items && data.items.length > 0 && data.items[0]?.cart_id) {
+                    await checkCartStatus(data.items[0].cart_id);
+                }
             } else {
                 throw new Error(data.message || 'Failed to fetch cart');
             }
@@ -56,8 +62,40 @@ export default function CartPage() {
         }
     };
 
+    const checkCartStatus = async (cartId: number) => {
+        try {
+            const response = await fetch(`/api/cart/cek_status_cart/${cartId}`);
+            const data = await response.json();
+            
+            // Jika ada data, berarti cart sudah diproses/dipesan
+            if (data.success && data.data) {
+                setCartAlreadyOrdered(true);
+            }
+        } catch (error) {
+            console.error('Error checking cart status:', error);
+            // Jika error, assume cart belum diproses (biar user bisa lanjut)
+        }
+    };
+
+    const handleCreateNewCart = async () => {
+        const result = await Swal.fire({
+            title: 'Buat Keranjang Baru?',
+            text: 'Anda akan membuat keranjang baru untuk memesan lagi.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#10b981',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Buat Baru!',
+            cancelButtonText: 'Batal'
+        });
+
+        if (result.isConfirmed) {
+            // Redirect ke halaman home untuk mulai order baru
+            router.push(`/customers/?table=${table}`);
+        }
+    };
+
     // Calculate totals
-    // const subtotal = cartItems.reduce((sum, item) => sum + item.totalHarga.integer() , 0);
     const subtotal = cartItems.reduce((sum, item) => {
         const total = item.totalHarga
             ? Number(item.totalHarga)
@@ -134,7 +172,6 @@ export default function CartPage() {
         }
 
         try {
-            // console.log('deviceId:', localStorage.getItem('device_id'));
             const response = await fetch('/api/order', {
                 method: 'POST',
                 headers: {
@@ -172,6 +209,78 @@ export default function CartPage() {
                     <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-green-500 border-r-transparent"></div>
                     <p className="mt-4 text-gray-600">Loading...</p>
                 </div>
+            </div>
+        );
+    }
+
+    // Tampilan jika cart sudah diproses
+    if (cartAlreadyOrdered) {
+        return (
+            <div className="min-h-screen bg-gray-50 pb-20">
+                {/* Header */}
+                <header className="bg-white shadow-sm sticky top-0 z-10">
+                    <div className="max-w-7xl mx-auto px-4 py-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => router.push(`/?table=${table}`)}
+                                    className="text-gray-600 hover:text-gray-900"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                                <h1 className="text-2xl font-bold">Keranjang</h1>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-gray-600">Meja:</span>
+                                <span className="font-semibold text-green-500">{mejaName || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="max-w-7xl mx-auto px-4 py-6">
+                    <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+                        {/* Icon */}
+                        <div className="mb-6">
+                            <div className="mx-auto w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        {/* Text */}
+                        <h2 className="text-2xl font-bold text-gray-900 mb-3">Pesanan Sudah Diproses</h2>
+                        <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                            Keranjang ini sudah diproses menjadi pesanan. Anda dapat melihat status pesanan di halaman riwayat atau membuat pesanan baru.
+                        </p>
+
+                        {/* Actions */}
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-lg mx-auto">
+                            <button
+                                onClick={() => router.push(`/customers/history?table=${table}`)}
+                                className="flex-1 bg-green-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                Lihat Riwayat Pesanan
+                            </button>
+                            <button
+                                onClick={handleCreateNewCart}
+                                className="flex-1 bg-white text-green-500 border-2 border-green-500 py-3 px-6 rounded-lg font-semibold hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                                Buat Pesanan Baru
+                            </button>
+                        </div>
+                    </div>
+                </main>
+                <BottomNav />
             </div>
         );
     }
