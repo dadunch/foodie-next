@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Calendar, Clock, ShoppingBag, ChevronRight, Filter, Receipt, X } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
-import { exit } from 'process';
 
 interface OrderItem {
     id: number;
@@ -43,29 +42,34 @@ export default function HistoryPage() {
     const [error, setError] = useState<string | null>(null);
     const [filterStatus, setFilterStatus] = useState<'all' | 'completed' | 'processing' | 'cancelled' | 'notpayyed' | 'notprocessed'>('all');
     const [expandedOrder, setExpandedOrder] = useState<number | null>(null);
+    const [isClient, setIsClient] = useState(false);
+
+    // Set isClient to true once component mounts
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
-        if (tableParam) {
+        if (tableParam && isClient) {
             fetchOrderHistory();
-        } else {
+        } else if (!tableParam && isClient) {
             setError('Table parameter missing');
             setLoading(false);
         }
-    }, [tableParam]);
+    }, [tableParam, isClient]);
 
     const fetchOrderHistory = async () => {
         try {
             setLoading(true);
             setError(null);
             
-            const response = await fetch(`/api/order/history?device_id=${localStorage.getItem('device_id') || ''}`);
+            const deviceId = typeof window !== 'undefined' ? localStorage.getItem('device_id') || '' : '';
+            const response = await fetch(`/api/order/history?device_id=${deviceId}`);
             
-            // Check if response is ok
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
-            // Check content type
             const contentType = response.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
                 throw new Error('Response is not JSON. API route might not exist.');
@@ -136,23 +140,27 @@ export default function HistoryPage() {
     };
 
     const handleReorder = async (order: Order) => {
-        // Implementasi reorder - tambahkan semua items ke cart
-        console.log(order.foodcourt_id, Number(sessionStorage.getItem('foodcourt_id')));
-        if(Number(order.foodcourt_id) !== Number(sessionStorage.getItem('foodcourt_id'))) {
+        if (!isClient) return;
+
+        const foodcourtId = typeof window !== 'undefined' ? sessionStorage.getItem('foodcourt_id') : '';
+        
+        if(Number(order.foodcourt_id) !== Number(foodcourtId)) {
             alert('Tidak dapat memesan ulang. Pesanan berasal dari foodcourt yang berbeda.');
             return;
         }
+        
         try {
+            const mejaId = typeof window !== 'undefined' ? sessionStorage.getItem('meja_id') || '' : '';
+            
             for (const item of order.items) {
                 const formData = new FormData();
-                formData.append('meja_id', sessionStorage.getItem('meja_id') || '');
+                formData.append('meja_id', mejaId);
                 formData.append('item_id', item.id.toString());
                 formData.append('quantity', item.jumlah.toString());
                 formData.append('toppings', JSON.stringify(item.toppings.map(t => t.id.toString())));
                 formData.append('notes', '');
                 formData.append('price', `Rp ${item.harga}`);
 
-                // console.log(order);
                 await fetch('/api/cart', {
                     method: 'POST',
                     body: formData
