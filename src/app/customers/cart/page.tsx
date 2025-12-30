@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import BottomNav from '@/components/BottomNav';
+export const dynamic = 'force-dynamic';
 
 export default function CartPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const table = searchParams.get('table');
-    const mejaName = sessionStorage.getItem('table_name') || 'Table 21';
+    // const mejaName = sessionStorage.getItem('table_name') || 'Table 21';
+    const [mejaName, setMejaName] = useState('Table 21');
+
 
     
     const [cartItems, setCartItems] = useState<{ 
@@ -32,6 +35,12 @@ export default function CartPage() {
             fetchCartData();
         }
     }, [table]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setMejaName(sessionStorage.getItem('table_name') || 'Table 21');
+        }
+    }, []);
 
     const fetchCartData = async () => {
         try {
