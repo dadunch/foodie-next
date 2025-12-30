@@ -356,14 +356,14 @@ export default function ItemDetail() {
                 {/* Notes */}
                 <section className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                     <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
-                        <Edit3 className="w-5 h-5 text-gray-400" />
+                        <Edit3 className="w-5 h-5 text-gray-800" />
                         Catatan Khusus
                     </h3>
                     <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Contoh: Jangan terlalu pedas, saus dipisah..."
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all min-h-[100px] resize-none"
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all min-h-[100px] resize-none"
                     />
                 </section>
 
