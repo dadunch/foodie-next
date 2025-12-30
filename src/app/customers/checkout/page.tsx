@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import BottomNav from '@/components/BottomNav';
 
-export default function CheckoutPage() {
+function CheckoutContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const table = searchParams.get('table');
-    const mejaName = sessionStorage.getItem('table_name') || 'Table 21';
+    const [mejaName, setMejaName] = useState('Table 21');
 
     const [paymentMethod, setPaymentMethod] = useState('CASH');
     const [loading, setLoading] = useState(true);
@@ -32,6 +32,12 @@ export default function CheckoutPage() {
     }[]>([]);
 
     const [tableInfo, setTableInfo] = useState(null);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setMejaName(sessionStorage.getItem('table_name') || 'Table 21');
+        }
+    }, []);
 
     useEffect(() => {
         if (table) {
@@ -89,7 +95,7 @@ export default function CheckoutPage() {
 
         try {
             // Ambil device_id dari localStorage
-            const deviceId = localStorage.getItem('device_id');
+            const deviceId = typeof window !== 'undefined' ? localStorage.getItem('device_id') : '';
 
             const response = await fetch('/api/payment', {
                 method: 'POST',
@@ -479,5 +485,23 @@ export default function CheckoutPage() {
 
             <BottomNav />
         </div>
+    );
+}
+
+// Main export with Suspense wrapper
+export const dynamic = 'force-dynamic';
+
+export default function CheckoutPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="text-center">
+                    <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-green-500 border-r-transparent"></div>
+                    <p className="mt-4 text-gray-600">Loading...</p>
+                </div>
+            </div>
+        }>
+            <CheckoutContent />
+        </Suspense>
     );
 }
