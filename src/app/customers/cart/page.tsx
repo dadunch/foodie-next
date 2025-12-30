@@ -464,7 +464,10 @@ function CartContent() {
     );
 }
 
-// Main export with Suspense wrapper
+// Main export with Suspense wrapper and runtime config
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
 export default function CartPage() {
     return (
         <Suspense fallback={
