@@ -1,6 +1,6 @@
 import { query } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import type { Table } from '@/types/database';
+import type { item } from '@/types/database';
 
 export async function GET(request: Request) {
     try {
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
             sqlQuery += ` WHERE merchant.foodcourt_id = $1`;
             params.push(foodcourtId);
         }
-        const items = await query<Table>(sqlQuery, params);
+        const items = await query<item>(sqlQuery, params);
     
         return NextResponse.json({
             success: true,

@@ -58,3 +58,26 @@ export interface Order {
     catatan: string | null;
     device_id: string | null;
 }
+
+export interface KategoriItem {
+    id: number;
+    kategori: string;
+    foodcourt_id: number;
+}
+
+export interface item {
+    id: number;
+    nama_item: string;
+    deskripsi: string;
+    harga_item: number;
+    foto_item: string;
+    katalog_merchant_id: number;
+    kategori_item_id: number;
+}
+
+export interface toping_item {
+    id: number;
+    item_id: number;
+    nama_toping: string;
+    harga: number;
+}

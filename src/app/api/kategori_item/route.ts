@@ -1,13 +1,13 @@
 import { query } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import type { Table } from '@/types/database';
+import type { KategoriItem } from '@/types/database';
 
 export async function GET(request: Request) {
     try {        
         const sqlQuery = `
             SELECT * from kategori_item
         `;        
-        const tables = await query<Table>(sqlQuery);        
+        const tables = await query<KategoriItem>(sqlQuery);        
         return NextResponse.json({
             success: true,
             data: tables,
