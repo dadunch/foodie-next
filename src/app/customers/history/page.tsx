@@ -114,7 +114,7 @@ export default function HistoryPage() {
 
         const labels = {
             notpayyed: 'Belum Bayar',
-            notprocessed: 'Belum Diproses',
+            notprocessed: 'Belum diproses',
             completed: 'Selesai',
             processing: 'Diproses',
             cancelled: 'Dibatalkan',

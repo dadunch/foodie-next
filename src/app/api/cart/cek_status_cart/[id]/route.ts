@@ -33,7 +33,7 @@ export async function GET(
         FROM keranjang
         JOIN "order" ON keranjang.id = "order".keranjang_id
         WHERE keranjang.id = $1
-        AND "order"."status" in ('Belum Diproses', 'Diproses', 'Selesai')
+        AND "order"."status" in ('Belum diproses', 'Diproses', 'Selesai')
         `,
         [id]
         );

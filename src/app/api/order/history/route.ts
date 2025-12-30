@@ -142,7 +142,7 @@ export async function GET(request: Request) {
                             displayStatus = 'cancelled';
                         } else if (order.status === 'Belum Bayar') {
                             displayStatus = 'notpayyed';
-                        } else if (order.status === 'Belum Diproses') {
+                        } else if (order.status === 'Belum diproses') {
                             displayStatus = 'notprocessed';
                         }
 

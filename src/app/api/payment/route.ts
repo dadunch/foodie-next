@@ -81,7 +81,7 @@ export async function POST(request: Request) {
         if (isQris) {
             await query(
                 `UPDATE "order" SET status = $1 WHERE id = $2`,
-                ['Belum Diproses', order_id]
+                ['Belum diproses', order_id]
             );
             console.log('✅ Order status updated successfully');
         } else {

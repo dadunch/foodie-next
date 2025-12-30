@@ -246,7 +246,7 @@ export default function FoodieQRScanner() {
                 </div>
 
                 {/* --- LOGIN BUTTONS --- */}
-                <div className="flex justify-center gap-3">
+                {/* <div className="flex justify-center gap-3">
                     <button 
                         onClick={() => alert('Navigate to Cashier Login')}
                         className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-600 rounded-full shadow-sm border border-gray-200 text-sm font-semibold hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all"
@@ -262,7 +262,7 @@ export default function FoodieQRScanner() {
                         Merchant
                     </button>
                 </div>
-                
+                 */}
                 {/* Footer yang minimalis */}
                 {/* <p className="text-center text-[10px] text-gray-300 mt-6">
                     &copy; 2025 Foodie App.
