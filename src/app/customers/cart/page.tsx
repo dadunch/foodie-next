@@ -1,19 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Swal from 'sweetalert2';
 import BottomNav from '@/components/BottomNav';
-export const dynamic = 'force-dynamic';
 
-export default function CartPage() {
+// Separate component for the cart content
+function CartContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const table = searchParams.get('table');
-    // const mejaName = sessionStorage.getItem('table_name') || 'Table 21';
     const [mejaName, setMejaName] = useState('Table 21');
-
-
     
     const [cartItems, setCartItems] = useState<{ 
         id: number; 
@@ -190,7 +187,7 @@ export default function CartPage() {
                     cartId: cartItems[0]?.cart_id,
                     catatan: additionalNotes,
                     nominalBayar: grandTotal,
-                    device_id : localStorage.getItem('device_id') || ''
+                    device_id : typeof window !== 'undefined' ? localStorage.getItem('device_id') || '' : ''
                 })
                 
             });
@@ -464,5 +461,21 @@ export default function CartPage() {
             </main>
             <BottomNav />
         </div>
+    );
+}
+
+// Main export with Suspense wrapper
+export default function CartPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="text-center">
+                    <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-green-500 border-r-transparent"></div>
+                    <p className="mt-4 text-gray-600">Loading...</p>
+                </div>
+            </div>
+        }>
+            <CartContent />
+        </Suspense>
     );
 }
