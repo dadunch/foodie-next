@@ -9,8 +9,8 @@ function CheckoutContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const table = searchParams.get('table');
+    
     const [mejaName, setMejaName] = useState('Table 21');
-
     const [paymentMethod, setPaymentMethod] = useState('CASH');
     const [loading, setLoading] = useState(true);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -18,6 +18,7 @@ function CheckoutContent() {
     const [showCartModal, setShowCartModal] = useState(false);
     const [showQRModal, setShowQRModal] = useState(false);
     const [qrCodeData, setQRCodeData] = useState<string>('');
+    const [isClient, setIsClient] = useState(false);
 
     const [checkoutData, setCartItems] = useState<{ 
         id: number; 
@@ -33,17 +34,24 @@ function CheckoutContent() {
 
     const [tableInfo, setTableInfo] = useState(null);
 
+    // Set client-side flag
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            setMejaName(sessionStorage.getItem('table_name') || 'Table 21');
-        }
+        setIsClient(true);
     }, []);
 
+    // Load meja name from sessionStorage
     useEffect(() => {
-        if (table) {
+        if (isClient && typeof window !== 'undefined') {
+            setMejaName(sessionStorage.getItem('table_name') || 'Table 21');
+        }
+    }, [isClient]);
+
+    // Fetch cart data
+    useEffect(() => {
+        if (table && isClient) {
             fetchCartData();
         }
-    }, [table]);
+    }, [table, isClient]);
 
     const fetchCartData = async () => {
         try {
@@ -90,12 +98,13 @@ function CheckoutContent() {
     };
 
     const handlePayment = async () => {
+        if (!isClient) return;
+
         setShowConfirmModal(false);
         setShowProcessingModal(true);
 
         try {
-            // Ambil device_id dari localStorage
-            const deviceId = typeof window !== 'undefined' ? localStorage.getItem('device_id') : '';
+            const deviceId = typeof window !== 'undefined' ? localStorage.getItem('device_id') || '' : '';
 
             const response = await fetch('/api/payment', {
                 method: 'POST',
@@ -115,12 +124,10 @@ function CheckoutContent() {
             setShowProcessingModal(false);
 
             if (data.success) {
-                // Jika QRIS, tampilkan QR Code modal
                 if (paymentMethod === 'Qris' && data.qr_code_base64) {
                     setQRCodeData(data.qr_code_base64);
                     setShowQRModal(true);
                 } else {
-                    // Jika CASH, tampilkan pesan
                     await Swal.fire({
                         title: 'Pembayaran Berhasil Dibuat!',
                         text: data.message || 'Silakan membayar di kasir',
