@@ -26,7 +26,7 @@ export default function FoodieMenuContent() {
     // --- STATE ---
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedMerchant, setSelectedMerchant] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [selectedCategory, setSelectedCategory] = useState('Semua');
     const [cartItems, setCartItems] = useState<Record<number, number>>({});
     const [recommendations, setRecommendations] = useState<any[]>([]);
     const [merchants, setMerchants] = useState<any[]>([]);
@@ -179,8 +179,8 @@ export default function FoodieMenuContent() {
                 item.nama_merchant.toLowerCase().includes(searchQuery.toLowerCase());
 
             const matchesMerchant = selectedMerchant === '' || item.nama_merchant.toString() === selectedMerchant;
-            const matchesCategory = selectedCategory === 'all' ||
-                (item.nama_kategori && item.nama_kategori.toLowerCase() === selectedCategory.toLowerCase());
+            const matchesCategory = selectedCategory === 'Semua' ||
+                (item.kategori && item.kategori.toLowerCase() === selectedCategory.toLowerCase());
 
             return matchesSearch && matchesMerchant && matchesCategory;
         });
@@ -352,10 +352,10 @@ export default function FoodieMenuContent() {
                     )}
 
                     <section className="p-4">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">Menu Makanan</h2>
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">Pilih Menu</h2>
 
                         <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
-                            {['all', 'food', 'drink', 'dessert'].map((category) => (
+                            {['Semua', 'Makanan', 'Minuman', 'Cemilan'].map((category) => (
                                 <button
                                     key={category}
                                     onClick={() => setSelectedCategory(category)}
