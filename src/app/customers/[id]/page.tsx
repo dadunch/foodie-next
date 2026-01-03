@@ -258,7 +258,7 @@ export default function ItemDetail() {
                 {/* Hero Image */}
                 <div className="rounded-2xl overflow-hidden shadow-lg bg-white aspect-[4/3] relative">
                     <img
-                        src={`/img/${itemData.foto_item}`}
+                        src={`${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/item_image/img/${itemData.foto_item}`}
                         alt={itemData.nama_item}
                         className="w-full h-full object-cover"
                         onError={(e) => {

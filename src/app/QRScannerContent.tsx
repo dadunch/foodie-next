@@ -199,20 +199,114 @@ export default function QRScannerContent() {
                             </div>
                         </div>
                     ) : (
-                        <div className="relative">
+                        <div className="relative max-w-md mx-auto overflow-hidden">
+                            {/* Header / Close Button - Menggunakan gaya Tombol Bulat iOS */}
                             <button
                                 onClick={stopScanning}
-                                className="absolute top-2 right-2 z-20 bg-white/90 hover:bg-red-50 text-gray-600 hover:text-red-500 p-2 rounded-full shadow-md backdrop-blur-sm transition-colors"
+                                className="absolute top-4 right-4 z-30 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white p-2 rounded-full transition-all active:scale-90"
                             >
-                                <X className="w-5 h-5" />
+                                <X className="w-5 h-5 stroke-[2.5]" />
                             </button>
-                            <div className="rounded-2xl overflow-hidden border-2 border-green-500 shadow-inner bg-black">
-                                <div id="qr-reader" className="w-full"></div>
+                            
+                            <div className="relative rounded-[40px] overflow-hidden bg-black shadow-2xl border border-white/10">
+                                {/* Scanner Overlay - Frame fokus yang lebih halus */}
+                                <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
+                                    {/* Guide Frame (Hanya sudut kecil yang elegan) */}
+                                    <div className="relative w-64 h-64">
+                                        <div className="absolute top-0 left-0 w-8 h-8 border-t-[3px] border-l-[3px] border-white/80 rounded-tl-2xl"></div>
+                                        <div className="absolute top-0 right-0 w-8 h-8 border-t-[3px] border-r-[3px] border-white/80 rounded-tr-2xl"></div>
+                                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-[3px] border-l-[3px] border-white/80 rounded-bl-2xl"></div>
+                                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-[3px] border-r-[3px] border-white/80 rounded-br-2xl"></div>
+                                        
+                                        {/* Scanning Line - Tipis dan elegan seperti FaceID */}
+                                        <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-scan"></div>
+                                    </div>
+                                </div>
+                                
+                                {/* Kamera Container */}
+                                <div className="relative bg-black aspect-square overflow-hidden">
+                                    <div id="qr-reader" className="w-full h-full qr-reader-ios"></div>
+                                </div>
+
+                                {/* Bottom Status - Floating Glassmorphism */}
+                                <div className="absolute bottom-6 inset-x-0 z-20 flex justify-center px-6">
+                                    <div className="bg-black/50 backdrop-blur-xl border border-white/10 px-5 py-2.5 rounded-full flex items-center gap-3">
+                                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]"></div>
+                                        <p className="text-[13px] text-white/90 font-medium tracking-tight">
+                                            Scanning QR Code...
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="text-center text-xs text-green-600 mt-2 animate-pulse font-semibold">
-                                <ScanLine className="inline w-3 h-3 mr-1" />
-                                Mencari kode QR...
+                            
+                            {/* Helper Text di luar box */}
+                            <p className="text-center mt-6 text-sm text-gray-500 font-normal">
+                                Posisikan kode di tengah area pemindaian
                             </p>
+
+                            <style jsx>{`
+                                @keyframes scan {
+                                    0% { top: 0%; opacity: 0; }
+                                    15% { opacity: 1; }
+                                    85% { opacity: 1; }
+                                    100% { top: 100%; opacity: 0; }
+                                }
+                                
+                                .animate-scan {
+                                    animation: scan 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                                }
+
+                                /* Overriding Library Style untuk tampilan iOS */
+                                .qr-reader-ios :global(#qr-reader) {
+                                    border: none !important;
+                                }
+
+                                .qr-reader-ios :global(video) {
+                                    object-fit: cover !important;
+                                    border-radius: 0px !important;
+                                }
+
+                                /* Sembunyikan elemen bawaan yang mengganggu */
+                                .qr-reader-ios :global(#qr-shaded-region) {
+                                    display: none !important;
+                                }
+                                
+                                .qr-reader-ios :global(#qr-reader__dashboard) {
+                                    background: transparent !important;
+                                    padding: 20px !important;
+                                }
+
+                                /* Tombol Start/Stop bergaya iOS */
+                                .qr-reader-ios :global(button) {
+                                    background-color: #007AFF !important; /* iOS Blue */
+                                    color: white !important;
+                                    border-radius: 12px !important;
+                                    padding: 12px 24px !important;
+                                    font-weight: 600 !important;
+                                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica !important;
+                                    border: none !important;
+                                    transition: all 0.2s ease !important;
+                                    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+                                    width: 100% !important;
+                                    margin-top: 10px !important;
+                                }
+
+                                .qr-reader-ios :global(button:active) {
+                                    transform: scale(0.96) !important;
+                                    opacity: 0.8 !important;
+                                }
+
+                                /* Camera Select bergaya iOS */
+                                .qr-reader-ios :global(select) {
+                                    background: rgba(255,255,255,0.1) !important;
+                                    color: white !important;
+                                    border: 1px solid rgba(255,255,255,0.2) !important;
+                                    border-radius: 10px !important;
+                                    padding: 8px !important;
+                                    margin-bottom: 10px !important;
+                                    width: 100% !important;
+                                }
+                            `}</style>
                         </div>
                     )}
 

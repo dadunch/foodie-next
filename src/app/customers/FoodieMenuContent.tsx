@@ -221,16 +221,16 @@ export default function FoodieMenuContent() {
                 }`}
             >
                 <div
-                    className="h-40 bg-cover bg-center relative"
-                    style={{ backgroundImage: `url(/img/${item.foto_item})` }}
-                >
+                className="h-40 bg-cover bg-center relative"
+                style={{
+                    backgroundImage: `url(${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/item_image/img/${item.foto_item})`
+                }}>
                     {qty > 0 && (
                         <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full shadow-md font-bold z-10">
                             {qty}x di keranjang
                         </div>
                     )}
-                </div>
-                
+                </div>      
                 <div className="p-3">
                     <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-1">
                         {item.nama_item}

@@ -283,7 +283,7 @@ export default function CheckoutContent() {
                                     <div key={item.id} className="bg-gray-50 rounded-lg p-4 flex gap-4">
                                         <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                             {item.foto_item ? (
-                                                <img src={`/img/${item.foto_item}`} alt={item.nama_item} className="w-full h-full object-cover" />
+                                                <img src={`${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/item_image/img/${item.foto_item}`} alt={item.nama_item} className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                                                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

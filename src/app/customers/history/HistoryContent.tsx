@@ -380,7 +380,7 @@ export default function HistoryContent() {
                                                     <div
                                                         className="w-16 h-16 bg-cover bg-center rounded-lg flex-shrink-0"
                                                         style={{
-                                                            backgroundImage: `url(/img/${item.foto_item})`,
+                                                            backgroundImage: `url(${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/item_image/img/${item.foto_item})`,
                                                         }}
                                                     />
                                                     <div className="flex-1 min-w-0">
