@@ -109,7 +109,8 @@ function CartContent() {
         return sum + total;
     }, 0);
     const tax = subtotal * 0.12;
-    const grandTotal = subtotal + tax;
+    const layanan = subtotal * 0.02;
+    const grandTotal = subtotal + tax + layanan;
 
     // Format currency
     const formatRupiah = (amount: number | bigint) => {
@@ -417,6 +418,10 @@ function CartContent() {
                                 <div className="flex justify-between text-gray-700">
                                     <span>PPN (12%)</span>
                                     <span>{formatRupiah(tax)}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-700">
+                                    <span>Biaya Layanan (2%)</span>
+                                    <span>{formatRupiah(layanan)}</span>
                                 </div>
                                 <div className="flex justify-between text-xl font-bold pt-3 border-t">
                                     <span>Total</span>

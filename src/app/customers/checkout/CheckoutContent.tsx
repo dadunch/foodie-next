@@ -85,7 +85,8 @@ export default function CheckoutContent() {
 
     const subtotal = checkoutData.reduce((sum, item) => sum + Number(item.totalHarga || 0), 0);
     const serviceCharge = subtotal * 0.02;
-    const grandTotal = subtotal + serviceCharge;
+    const ppn = subtotal * 0.12
+    const grandTotal = subtotal + serviceCharge + ppn;
 
     const getPaymentMethodId = (method: string) => {
         const methodMap: { [key: string]: number } = {
@@ -229,6 +230,10 @@ export default function CheckoutContent() {
                             <span>{formatRupiah(subtotal)}</span>
                         </div>
                         <div className="flex justify-between text-gray-700">
+                            <span>PPN (12%)</span>
+                            <span>{formatRupiah(ppn)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-700">
                             <span>Biaya Layanan (2%)</span>
                             <span>{formatRupiah(serviceCharge)}</span>
                         </div>
@@ -318,6 +323,10 @@ export default function CheckoutContent() {
                                 <div className="flex justify-between text-gray-700">
                                     <span>Subtotal</span>
                                     <span>{formatRupiah(subtotal)}</span>
+                                </div>
+                                <div className="flex justify-between text-gray-700">
+                                    <span>PPN (12%)</span>
+                                    <span>{formatRupiah(serviceCharge)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-700">
                                     <span>Biaya Layanan (2%)</span>
